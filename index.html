@@ -478,8 +478,10 @@ function parseWmsQR(raw){
         if(mm?.[2]) uom=mm[2].trim();
       }else if(['Q','QTY','QUANTITY'].includes(key)){
         base.qRaw=value;
-        if(/^[-+]?\d+(?:\.\d+)?$/.test(value)) qty=Number(value);
-        else if(/^[-+]?\d+(?:\.\d+)?\s*\/\s*[A-Za-z0-9._-]+$/.test(value)) qty=Number(value.split('/')[0].trim());
+        // Supplier Q may contain multiple slash-separated values, e.g. Q:48/8/12.
+        // WMS quantity is the first numeric value: 48.
+        const qMatch=value.match(/^\s*([-+]?\d+(?:\.\d+)?)(?:\s*\/.*)?$/);
+        if(qMatch) qty=Number(qMatch[1]);
       }else if(['B','BATCH','BATCHNO','BATCHNUMBER'].includes(key)) batch=value;
       else if(key==='LOT') base.lot=value;
       else if(['PO','PONO','PURCHASEORDER'].includes(key)) base.po=value;

@@ -440,8 +440,15 @@ function parseWmsQR(raw){
         if(mm?.[2]) uom=mm[2].trim();
       }else if(['Q','QTY','QUANTITY'].includes(key)){
         base.qRaw=value;
-        if(/^[-+]?\d+(?:\.\d+)?$/.test(value)) qty=Number(value);
-        else if(/^[-+]?\d+(?:\.\d+)?\s*\/\s*[A-Za-z0-9._-]+$/.test(value)) qty=Number(value.split('/')[0].trim());
+        // Supplier Q may contain multiple slash-separated quantities, e.g. Q:48/8/12.
+        // For WMS receiving, the first numeric segment is the total quantity.
+        // Keep the complete value in qRaw for traceability.
+        const qParts=value.split('/').map(x=>x.trim()).filter(Boolean);
+        if(/^[-+]?\d+(?:\.\d+)?$/.test(value)) {
+          qty=Number(value);
+        } else if(qParts.length && /^[-+]?\d+(?:\.\d+)?$/.test(qParts[0])) {
+          qty=Number(qParts[0]);
+        }
       }else if(['B','BATCH','BATCHNO','BATCHNUMBER'].includes(key)) batch=value;
       else if(key==='LOT') base.lot=value;
       else if(['PO','PONO','PURCHASEORDER'].includes(key)) base.po=value;

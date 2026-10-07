@@ -73,6 +73,27 @@
 .scan-fullscreen-wrap .camera-hint{font-size:13px;opacity:.9;text-align:center;margin-bottom:4px}
 body.scan-active{overflow:hidden!important}
 @media(max-width:700px){.scan-fullscreen-wrap .camera-guide{width:84vw;height:52vw}.scan-fullscreen-wrap .camera-stop{padding:13px 34px}}
+
+/* ===== V25 INLINE CAMERA TRUE FULLSCREEN ===== */
+.inline-scanner.inline-camera-fullscreen{
+ position:fixed!important; inset:0!important; width:100vw!important; height:100vh!important;
+ min-height:100vh!important; margin:0!important; padding:0!important; border:0!important;
+ border-radius:0!important; z-index:2147483647!important; background:#000!important;
+ overflow:hidden!important; color:#fff!important;
+}
+.inline-camera-fullscreen .inline-scanner-head{position:absolute!important;top:0;left:0;right:0;z-index:10;padding:18px 16px!important;color:#fff!important;background:linear-gradient(to bottom,rgba(0,0,0,.65),transparent)!important}
+.inline-camera-fullscreen .inline-scanner-head small{color:#ddd!important}
+.inline-camera-fullscreen .scan-op-badge{background:rgba(0,0,0,.5)!important;color:#fff!important}
+.inline-camera-fullscreen .inline-scanner-row{position:absolute!important;left:0;right:0;bottom:24px;z-index:10;display:flex!important;justify-content:center!important;align-items:center!important}
+.inline-camera-fullscreen .inline-scanner-row input,.inline-camera-fullscreen .inline-scanner-row button:not(:last-child),.inline-camera-fullscreen .manual-inline{display:none!important}
+.inline-camera-fullscreen .inline-scanner-row button:last-child{display:block!important;border:1px solid rgba(255,255,255,.8)!important;background:rgba(0,0,0,.7)!important;color:#fff!important;border-radius:14px!important;padding:14px 38px!important;font-size:18px!important;font-weight:700!important}
+.inline-camera-fullscreen .inline-scan-status{position:absolute!important;left:20px;right:20px;bottom:88px;z-index:10;text-align:center;color:#fff!important;text-shadow:0 1px 4px #000;font-size:14px!important}
+.inline-camera-fullscreen .qr-reader{position:absolute!important;inset:0!important;width:100vw!important;height:100vh!important;min-height:100vh!important;margin:0!important;padding:0!important;background:#000!important;border:0!important}
+.inline-camera-fullscreen .qr-reader video{width:100%!important;height:100%!important;max-width:none!important;object-fit:cover!important}
+.inline-camera-fullscreen .qr-reader__scan_region{width:100%!important;height:100%!important}
+.inline-camera-fullscreen .qr-reader__dashboard{display:none!important}
+.inline-camera-fullscreen:after{content:"";position:absolute;left:50%;top:50%;width:min(82vw,420px);height:min(48vw,260px);transform:translate(-50%,-50%);border:2px solid rgba(255,255,255,.9);border-radius:16px;box-shadow:0 0 0 9999px rgba(0,0,0,.18);pointer-events:none;z-index:5}
+@media(max-width:700px){.inline-camera-fullscreen:after{width:84vw;height:52vw}}
 </style>
 <style>
 .btn-sm{padding:7px 12px;font-size:12px}.btn.danger{border:1px solid #d64545;background:#fff;color:#b42318}.selected-item{display:grid;grid-template-columns:2fr 1fr 1fr;gap:12px;padding:14px;border:1px solid #e5e7eb;border-radius:10px;background:#fafafa;margin-bottom:14px}.selected-item div{display:flex;flex-direction:column;gap:4px}.selected-item small{font-size:10px;letter-spacing:.06em;color:#6b7280}.selected-item b{font-size:15px}.selected-item span{font-size:12px;color:#6b7280}.process-note{margin-top:12px;padding:10px 12px;border-left:3px solid #334155;background:#f8fafc;color:#475569;font-size:12px}
@@ -502,8 +523,36 @@ function parseWmsQR(raw){
 function handleInlineScan(prefix,op,raw){if(!raw)return;try{const r=parseWmsQR(raw);window._inlineScans=window._inlineScans||{};window._inlineScans[prefix]=r;const ok=applyScanToTransaction(prefix,op,r);if(ok)toast('Scan berhasil: '+r.partNumber+(r.qty!==null?' | Qty '+r.qty:''));}catch(e){setScanStatus(prefix,e.message||'Format QR tidak valid.',false);toast(e.message||'Format QR tidak valid.',false)}}
 function lookupInlinePart(prefix,op){const pn=String(document.getElementById(prefix+'ManualPart')?.value||'').trim();if(!pn){toast('Masukkan Part Number.',false);return;}const master=CACHE.parts.find(x=>String(x.PartNumber||'').trim().toUpperCase()===pn.toUpperCase());if(!master){setScanStatus(prefix,'Part Number tidak ditemukan di MasterPart: '+pn,false);toast('Part Number tidak ditemukan di MasterPart.',false);return;}if(['receive','transfer','issue'].includes(op)){const mt=String(master.PartType||'').trim().toUpperCase().replace(/[-\s]+/g,'_');if(mt!=='MATERIAL'){setScanStatus(prefix,'Hanya MATERIAL yang boleh digunakan untuk Receiving / Transfer / Issue.',false);toast('Part bukan MATERIAL.',false);return;}}const r={raw:'MANUAL:'+pn,partNumber:master.PartNumber||pn,partName:master.PartName||'',uom:master.UOM||'PCS',qty:null,batchNo:'',lot:'',po:'',date:'',dn:'',serial:'',serialNumber:'',vendor:'',plant:'',expiryDate:'',qRaw:'',fields:{},masterPartId:master.PartID,masterUom:master.UOM||'PCS',masterFound:true,manual:true};window._inlineScans=window._inlineScans||{};window._inlineScans[prefix]=r;applyScanToTransaction(prefix,op,r);toast('Part ditemukan: '+r.partNumber);}
 let inlineScanner=null;
-async function startInlineCamera(prefix,op){if(!window.Html5Qrcode){toast('Library kamera belum tersedia.',false);return;}await stopInlineCamera();const readerId='qrReader-'+prefix;const el=document.getElementById(readerId);if(!el)return;inlineScanner=new Html5Qrcode(readerId);try{await inlineScanner.start({facingMode:'environment'},{fps:10,qrbox:{width:280,height:180}},txt=>{handleInlineScan(prefix,op,txt);stopInlineCamera();});setScanStatus(prefix,'Kamera aktif. Arahkan ke QR/barcode.',true);}catch(e){inlineScanner=null;toast('Kamera tidak dapat dibuka: '+e,false);}}
-async function stopInlineCamera(){if(!inlineScanner)return;try{await inlineScanner.stop();await inlineScanner.clear()}catch(e){}inlineScanner=null;}
+async function startInlineCamera(prefix,op){
+  if(!window.Html5Qrcode){toast('Library kamera belum tersedia.',false);return;}
+  await stopInlineCamera();
+  const readerId='qrReader-'+prefix;
+  const el=document.getElementById(readerId);
+  const scannerBox=document.getElementById('scanner-'+prefix);
+  if(!el||!scannerBox)return;
+  inlineScanner=new Html5Qrcode(readerId);
+  scannerBox.classList.add('inline-camera-fullscreen');
+  try{
+    await inlineScanner.start(
+      {facingMode:{exact:'environment'}},
+      {fps:12,qrbox:(vw,vh)=>{const w=Math.min(Math.floor(vw*.82),420);const h=Math.min(Math.floor(vh*.48),260);return {width:w,height:h};},aspectRatio:1.7777778},
+      txt=>{handleInlineScan(prefix,op,txt);stopInlineCamera();}
+    );
+    try{if(!document.fullscreenElement && scannerBox.requestFullscreen) await scannerBox.requestFullscreen();}catch(e){}
+    setScanStatus(prefix,'Kamera aktif. Arahkan QR ke kotak scan.',true);
+  }catch(e){
+    inlineScanner=null;
+    scannerBox.classList.remove('inline-camera-fullscreen');
+    toast('Kamera tidak dapat dibuka: '+e,false);
+  }
+}
+async function stopInlineCamera(){
+  const box=document.querySelector('.inline-camera-fullscreen');
+  try{if(inlineScanner){await inlineScanner.stop();await inlineScanner.clear();}}catch(e){}
+  inlineScanner=null;
+  if(box)box.classList.remove('inline-camera-fullscreen');
+  try{if(document.fullscreenElement && document.exitFullscreen) await document.exitFullscreen();}catch(e){}
+}
 
 function receivingPage(){
   shell('Receiving','Inbound material · Supplier → STG',txLayout({

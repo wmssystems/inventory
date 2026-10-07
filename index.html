@@ -56,6 +56,23 @@
 .kpis-main{grid-template-columns:repeat(6,minmax(0,1fr));gap:12px;margin-bottom:12px}.kpis-main .kpi{min-height:126px;padding:17px;border-radius:14px;position:relative;overflow:hidden}.kpis-main .kpi span{font-size:9px;font-weight:800;letter-spacing:.08em}.kpis-main .kpi b{font-size:28px;line-height:1.1;margin-top:10px}.kpis-main .kpi small{font-size:10px}.k-stock{background:#10212d!important;color:#fff}.k-stock small{color:#b9c8d2}.k-inbound{border-left:4px solid #16834b}.k-issue{border-left:4px solid #2875a7}.k-consume{border-left:4px solid #6a58a5}.k-ng{border-left:4px solid #b73535}.k-delivery{border-left:4px solid #9a6a18}
 .dashboard-secondary{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:16px}.mini-stat{background:#fff;border:1px solid #e2e7eb;border-radius:12px;padding:12px 15px;display:flex;justify-content:space-between;align-items:center}.mini-stat span{font-size:11px;color:#71808d}.mini-stat b{font-size:15px}.panel-head{display:flex;justify-content:space-between;align-items:center}.panel-note{font-size:10px;color:#8a969f}
 @media(max-width:1250px){.kpis-main{grid-template-columns:repeat(3,1fr)}}@media(max-width:700px){.dash-hero{align-items:flex-start;gap:15px;flex-direction:column}.kpis-main{grid-template-columns:repeat(2,1fr)}.dashboard-secondary{grid-template-columns:1fr}.kpis-main .kpi b{font-size:22px}}
+
+/* ===== WMS V24 FULLSCREEN CAMERA MODE ===== */
+.scan-fullscreen-wrap{position:fixed!important;inset:0!important;z-index:99999!important;background:#000!important;color:#fff!important;overflow:hidden!important;padding:0!important;margin:0!important;width:100vw!important;height:100vh!important}
+.scan-fullscreen-wrap .scan-camera-shell{position:relative;width:100vw;height:100vh;display:flex;align-items:center;justify-content:center;background:#000}
+.scan-fullscreen-wrap #qrReader{width:100vw!important;height:100vh!important;min-height:100vh!important;margin:0!important;padding:0!important;background:#000!important}
+.scan-fullscreen-wrap #qrReader video{width:100%!important;height:100%!important;object-fit:cover!important}
+.scan-fullscreen-wrap #qrReader canvas{max-width:none!important}
+.scan-fullscreen-wrap .camera-overlay{position:absolute;inset:0;z-index:3;pointer-events:none;display:flex;flex-direction:column;align-items:center;justify-content:space-between;padding:18px 14px 28px;background:linear-gradient(to bottom,rgba(0,0,0,.55),transparent 22%,transparent 72%,rgba(0,0,0,.7))}
+.scan-fullscreen-wrap .camera-title{font-size:18px;font-weight:700;text-shadow:0 1px 4px #000;margin-top:6px}
+.scan-fullscreen-wrap .camera-guide{width:min(82vw,420px);height:min(58vw,300px);border:2px solid rgba(255,255,255,.9);border-radius:16px;box-shadow:0 0 0 9999px rgba(0,0,0,.12);position:absolute;top:50%;left:50%;transform:translate(-50%,-50%)}
+.scan-fullscreen-wrap .camera-guide:before,.scan-fullscreen-wrap .camera-guide:after{content:"";position:absolute;width:28px;height:28px;border-color:#fff;border-style:solid}
+.scan-fullscreen-wrap .camera-guide:before{top:-2px;left:-2px;border-width:4px 0 0 4px;border-radius:10px 0 0 0}
+.scan-fullscreen-wrap .camera-guide:after{right:-2px;bottom:-2px;border-width:0 4px 4px 0;border-radius:0 0 10px 0}
+.scan-fullscreen-wrap .camera-stop{pointer-events:auto;border:1px solid rgba(255,255,255,.7);background:rgba(0,0,0,.65);color:#fff;border-radius:12px;padding:14px 30px;font-size:17px;font-weight:700;margin-bottom:8px}
+.scan-fullscreen-wrap .camera-hint{font-size:13px;opacity:.9;text-align:center;margin-bottom:4px}
+body.scan-active{overflow:hidden!important}
+@media(max-width:700px){.scan-fullscreen-wrap .camera-guide{width:84vw;height:52vw}.scan-fullscreen-wrap .camera-stop{padding:13px 34px}}
 </style>
 <style>
 .btn-sm{padding:7px 12px;font-size:12px}.btn.danger{border:1px solid #d64545;background:#fff;color:#b42318}.selected-item{display:grid;grid-template-columns:2fr 1fr 1fr;gap:12px;padding:14px;border:1px solid #e5e7eb;border-radius:10px;background:#fafafa;margin-bottom:14px}.selected-item div{display:flex;flex-direction:column;gap:4px}.selected-item small{font-size:10px;letter-spacing:.06em;color:#6b7280}.selected-item b{font-size:15px}.selected-item span{font-size:12px;color:#6b7280}.process-note{margin-top:12px;padding:10px 12px;border-left:3px solid #334155;background:#f8fafc;color:#475569;font-size:12px}
@@ -440,15 +457,8 @@ function parseWmsQR(raw){
         if(mm?.[2]) uom=mm[2].trim();
       }else if(['Q','QTY','QUANTITY'].includes(key)){
         base.qRaw=value;
-        // Supplier Q may contain multiple slash-separated quantities, e.g. Q:48/8/12.
-        // For WMS receiving, the first numeric segment is the total quantity.
-        // Keep the complete value in qRaw for traceability.
-        const qParts=value.split('/').map(x=>x.trim()).filter(Boolean);
-        if(/^[-+]?\d+(?:\.\d+)?$/.test(value)) {
-          qty=Number(value);
-        } else if(qParts.length && /^[-+]?\d+(?:\.\d+)?$/.test(qParts[0])) {
-          qty=Number(qParts[0]);
-        }
+        if(/^[-+]?\d+(?:\.\d+)?$/.test(value)) qty=Number(value);
+        else if(/^[-+]?\d+(?:\.\d+)?\s*\/\s*[A-Za-z0-9._-]+$/.test(value)) qty=Number(value.split('/')[0].trim());
       }else if(['B','BATCH','BATCHNO','BATCHNUMBER'].includes(key)) batch=value;
       else if(key==='LOT') base.lot=value;
       else if(['PO','PONO','PURCHASEORDER'].includes(key)) base.po=value;
@@ -608,13 +618,35 @@ function handleScan(raw){
 async function startCamera(){
   if(!window.Html5Qrcode){toast('Library kamera belum tersedia. Gunakan scanner USB/Bluetooth.',false);return;}
   if(html5Scanner) return;
+  const wrap=document.getElementById('scanPageWrap');
+  const reader=document.getElementById('qrReader');
+  if(!wrap||!reader){toast('Area kamera tidak ditemukan.',false);return;}
+  wrap.classList.add('scan-fullscreen-wrap');
+  document.body.classList.add('scan-active');
+  reader.innerHTML='';
   html5Scanner=new Html5Qrcode('qrReader');
   try{
-    await html5Scanner.start({facingMode:'environment'},{fps:10,qrbox:{width:280,height:180}},txt=>{handleScan(txt);stopCamera();});
-    toast('Kamera aktif. Arahkan ke QR/barcode.');
-  }catch(e){html5Scanner=null;toast('Kamera tidak dapat dibuka: '+e,false)}
+    await html5Scanner.start({facingMode:'environment'},{fps:12,qrbox:(vw,vh)=>{const w=Math.min(Math.floor(vw*.82),420);const h=Math.min(Math.floor(vh*.42),300);return {width:w,height:h};},aspectRatio:1.333333},txt=>{handleScan(txt);stopCamera();});
+    try{if(!document.fullscreenElement&&wrap.requestFullscreen) await wrap.requestFullscreen();}catch(e){}
+    const overlay=document.getElementById('cameraOverlay');
+    if(overlay) overlay.classList.remove('hidden');
+    toast('Kamera aktif. Arahkan QR ke kotak scan.');
+  }catch(e){
+    html5Scanner=null;
+    wrap.classList.remove('scan-fullscreen-wrap');
+    document.body.classList.remove('scan-active');
+    toast('Kamera tidak dapat dibuka: '+e,false);
+  }
 }
-async function stopCamera(){if(!html5Scanner)return;try{await html5Scanner.stop();await html5Scanner.clear()}catch(e){}html5Scanner=null;}
+async function stopCamera(){
+  const wrap=document.getElementById('scanPageWrap');
+  try{if(html5Scanner){await html5Scanner.stop();await html5Scanner.clear();}}catch(e){}
+  html5Scanner=null;
+  document.getElementById('cameraOverlay')?.classList.add('hidden');
+  wrap?.classList.remove('scan-fullscreen-wrap');
+  document.body.classList.remove('scan-active');
+  try{if(document.fullscreenElement&&document.exitFullscreen) await document.exitFullscreen();}catch(e){}
+}
 function renderScanOperation(){
   const box=document.getElementById('scanOperation');
   if(!box) return;
@@ -712,13 +744,24 @@ async function processScannedTransaction(){
 }
 function scanPage(){
   shell('Scan QR / Barcode','Scanner khusus Receiving, Transfer, dan Issue: kamera HP, USB scanner, atau Bluetooth HID',`
+    <div id="scanPageWrap">
     <div class="scan-layout">
       <div class="panel scan-panel">
         <h4>1. Scan Data</h4>
         <p class="muted">USB/Bluetooth scanner bekerja seperti keyboard. Klik field lalu scan. Kamera HP menggunakan kamera belakang.</p>
         <input id="scanRaw" class="scan-input" autocomplete="off" placeholder="Scan QR / barcode di sini..."><div class="manual-part-box"><div class="manual-title">Manual Part Number</div><div class="manual-row"><input id="manualPartNumber" autocomplete="off" placeholder="Contoh: 15872068-00"><button class="btn ghost" type="button" onclick="lookupManualPart()">CHECK PART</button></div><small class="muted">Gunakan jika barcode/QR tidak dapat dibaca. Part harus sudah terdaftar di Master Part.</small></div>
         <div class="scan-actions"><button class="btn primary" onclick="handleScan(document.getElementById('scanRaw').value)">PROCESS SCAN</button><button class="btn ghost" onclick="startCamera()">📷 CAMERA</button><button class="btn ghost" onclick="stopCamera()">STOP CAMERA</button></div>
-        <div id="qrReader" class="qr-reader"></div>
+        <div class="scan-camera-shell">
+          <div id="qrReader" class="qr-reader"></div>
+          <div id="cameraOverlay" class="camera-overlay hidden">
+            <div class="camera-title">SCAN QR / BARCODE</div>
+            <div class="camera-guide"></div>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:8px">
+              <div class="camera-hint">Posisikan QR di dalam kotak</div>
+              <button class="camera-stop" type="button" onclick="stopCamera()">STOP CAMERA</button>
+            </div>
+          </div>
+        </div>
         <div class="scan-format"><b>Format internal:</b> P001|100|BATCH001<br><b>Format supplier:</b> M:14313141-00/PCS;Q:24/3/47;B:2605124CWW;Lot:20260512;PO:...;DN:...</div>
       </div>
       <div class="panel scan-panel">
@@ -731,7 +774,8 @@ function scanPage(){
       <div class="form-grid"><label class="field"><span>Operation</span><select id="scanOperationType" onchange="renderScanOperation()">${Object.entries(SCAN_OPS).map(([k,v])=>`<option value="${k}">${v.label}</option>`).join('')}</select></label></div>
       <div id="scanOperation"></div>
     </div>
-    <div class="panel raw-panel"><h4>Raw Scan / Traceability</h4><pre id="rawPreview">-</pre></div></div>`);
+    <div class="panel raw-panel"><h4>Raw Scan / Traceability</h4><pre id="rawPreview">-</pre></div>
+    </div>`);
   const input=document.getElementById('scanRaw');
   input.focus();
   input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();handleScan(input.value)}});
@@ -1007,7 +1051,7 @@ function showApp(u){
   document.getElementById('appPage').classList.remove('hidden');
   document.getElementById('userInfo').textContent=`${u.FullName||u.Username||'-'}`;document.getElementById('roleBadge').textContent=(u.Role||'').toUpperCase();buildNav();
 }
-document.getElementById('loginForm').addEventListener('submit',handleLogin);document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement){document.getElementById('scanPageWrap')?.classList.remove('scan-fullscreen-wrap');document.body.classList.remove('scan-active');}});
+document.getElementById('loginForm').addEventListener('submit',handleLogin);document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement&&html5Scanner){document.getElementById('scanPageWrap')?.classList.remove('scan-fullscreen-wrap');document.body.classList.remove('scan-active');}});
 (async()=>{
   buildNav();
   const raw=sessionStorage.getItem('wmsUser');

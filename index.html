@@ -163,7 +163,7 @@ function go(page){openNavSectionFor(page);if(!canAccessPage(page)){toast('Akses 
 function shell(title,desc,body,action=''){document.getElementById('content').innerHTML=`<div class="page-head"><div><h3>${title}</h3><p>${desc}</p></div>${action}</div>${body}`}
 function sel(name,items,placeholder='Select...'){return `<select id="${name}"><option value="">${placeholder}</option>${items.map(x=>`<option value="${esc(x.id)}">${esc(x.label)}</option>`).join('')}</select>`}
 function parts(){return CACHE.parts.map(x=>({id:x.PartID,label:`${x.PartNumber} — ${x.PartName||''}`}));}
-function materialParts(){return CACHE.parts.filter(x=>String(x.PartType||'').trim().toUpperCase().replace(/[-\s]+/g,'_')==='MATERIAL').map(x=>({id:x.PartID,label:`${x.PartNumber} — ${x.PartName||''}`}));}
+function materialParts(){return CACHE.parts.filter(x=>String(x.PartType||'').trim().toUpperCase().replace(/[-\s]+/g,'_')==='MATERIAL').map(x=>({id:x.PartID,label:`${x.PartNumber} — ${x.PartName||''}${x.PartGroup?' — '+x.PartGroup:''}`}));}
 function productionParts(kind){
   const list = CACHE.productionParts?.[kind] || [];
   return list.map(x=>({id:x.PartID,label:`${x.PartNumber} — ${x.PartName||''}`}));
@@ -523,7 +523,7 @@ function parseWmsQR(raw){
 }
 
 function handleInlineScan(prefix,op,raw){if(!raw)return;try{const r=parseWmsQR(raw);window._inlineScans=window._inlineScans||{};window._inlineScans[prefix]=r;const ok=applyScanToTransaction(prefix,op,r);if(ok)toast('Scan berhasil: '+r.partNumber+(r.qty!==null?' | Qty '+r.qty:''));}catch(e){setScanStatus(prefix,e.message||'Format QR tidak valid.',false);toast(e.message||'Format QR tidak valid.',false)}}
-function lookupInlinePart(prefix,op){const pn=String(document.getElementById(prefix+'ManualPart')?.value||'').trim();if(!pn){toast('Masukkan Part Number.',false);return;}const master=CACHE.parts.find(x=>String(x.PartNumber||'').trim().toUpperCase()===pn.toUpperCase());if(!master){setScanStatus(prefix,'Part Number tidak ditemukan di MasterPart: '+pn,false);toast('Part Number tidak ditemukan di MasterPart.',false);return;}if(['receive','transfer','issue'].includes(op)){const mt=String(master.PartType||'').trim().toUpperCase().replace(/[-\s]+/g,'_');if(mt!=='MATERIAL'){setScanStatus(prefix,'Hanya MATERIAL yang boleh digunakan untuk Receiving / Transfer / Issue.',false);toast('Part bukan MATERIAL.',false);return;}}const r={raw:'MANUAL:'+pn,partNumber:master.PartNumber||pn,partName:master.PartName||'',uom:master.UOM||'PCS',qty:null,batchNo:'',lot:'',po:'',date:'',dn:'',serial:'',serialNumber:'',vendor:'',plant:'',expiryDate:'',qRaw:'',fields:{},masterPartId:master.PartID,masterUom:master.UOM||'PCS',masterFound:true,manual:true};window._inlineScans=window._inlineScans||{};window._inlineScans[prefix]=r;applyScanToTransaction(prefix,op,r);toast('Part ditemukan: '+r.partNumber);}
+function lookupInlinePart(prefix,op){const pn=String(document.getElementById(prefix+'ManualPart')?.value||'').trim();if(!pn){toast('Masukkan Part Number.',false);return;}const master=CACHE.parts.find(x=>String(x.PartNumber||'').trim().toUpperCase()===pn.toUpperCase());if(!master){setScanStatus(prefix,'Part Number tidak ditemukan di MasterPart: '+pn,false);toast('Part Number tidak ditemukan di MasterPart.',false);return;}if(['receive','transfer','issue'].includes(op)){const mt=String(master.PartType||'').trim().toUpperCase().replace(/[-\s]+/g,'_');if(mt!=='MATERIAL'){setScanStatus(prefix,'Hanya MATERIAL yang boleh digunakan untuk Receiving / Transfer / Issue.',false);toast('Part bukan MATERIAL.',false);return;}}const r={raw:'MANUAL:'+pn,partNumber:master.PartNumber||pn,partName:master.PartName||'',uom:master.UOM||'PCS',qty:null,batchNo:'',lot:'',po:'',date:'',dn:'',serial:'',serialNumber:'',vendor:'',plant:'',expiryDate:'',qRaw:'',fields:{},masterPartId:master.PartID,masterUom:master.UOM||'PCS',partGroup:master.PartGroup||'',masterFound:true,manual:true};window._inlineScans=window._inlineScans||{};window._inlineScans[prefix]=r;applyScanToTransaction(prefix,op,r);toast('Part ditemukan: '+r.partNumber);}
 let inlineScanner=null;
 async function startInlineCamera(prefix,op){
   if(!window.Html5Qrcode){toast('Library kamera belum tersedia.',false);return;}
@@ -639,7 +639,7 @@ const SCAN_OPS={
 };
 function renderScanResult(r){
   const status=r.masterFound?'<span class="pill ok">MASTER OK</span>':'<span class="pill err">PART BELUM TERDAFTAR</span>';
-  document.getElementById('scanResult').innerHTML=`<div class="scan-result-grid"><div><small>Part Number</small><b>${esc(r.partNumber)}</b></div><div><small>Part Name</small><b>${esc(r.partName||'-')}</b></div><div><small>Qty Scan</small><b>${r.qty===null?'-':fmt(r.qty)}</b></div><div><small>Q Raw</small><b>${esc(r.qRaw||'-')}</b></div><div><small>UOM</small><b>${esc(r.uom||'-')}</b></div><div><small>Batch Number</small><b>${esc(r.batchNo||'-')}</b></div><div><small>Lot</small><b>${esc(r.lot||'-')}</b></div><div><small>PO</small><b>${esc(r.po||'-')}</b></div><div><small>Date</small><b>${esc(r.date||'-')}</b></div><div><small>Expiry / YX</small><b>${esc(r.expiryDate||'-')}</b></div><div><small>Delivery Note</small><b>${esc(r.dn||'-')}</b></div><div><small>Serial / S</small><b>${esc(r.serial||'-')}</b></div><div><small>Serial Number / SN</small><b>${esc(r.serialNumber||'-')}</b></div><div><small>Vendor / V</small><b>${esc(r.vendor||'-')}</b></div><div><small>Plant / P</small><b>${esc(r.plant||'-')}</b></div></div><div class="scan-status">${status}</div>`;
+  document.getElementById('scanResult').innerHTML=`<div class="scan-result-grid"><div><small>Part Number</small><b>${esc(r.partNumber)}</b></div><div><small>Part Name</small><b>${esc(r.partName||'-')}</b></div><div><small>Part Group</small><b>${esc(r.partGroup||'-')}</b></div><div><small>Qty Scan</small><b>${r.qty===null?'-':fmt(r.qty)}</b></div><div><small>Q Raw</small><b>${esc(r.qRaw||'-')}</b></div><div><small>UOM</small><b>${esc(r.uom||'-')}</b></div><div><small>Batch Number</small><b>${esc(r.batchNo||'-')}</b></div><div><small>Lot</small><b>${esc(r.lot||'-')}</b></div><div><small>PO</small><b>${esc(r.po||'-')}</b></div><div><small>Date</small><b>${esc(r.date||'-')}</b></div><div><small>Expiry / YX</small><b>${esc(r.expiryDate||'-')}</b></div><div><small>Delivery Note</small><b>${esc(r.dn||'-')}</b></div><div><small>Serial / S</small><b>${esc(r.serial||'-')}</b></div><div><small>Serial Number / SN</small><b>${esc(r.serialNumber||'-')}</b></div><div><small>Vendor / V</small><b>${esc(r.vendor||'-')}</b></div><div><small>Plant / P</small><b>${esc(r.plant||'-')}</b></div></div><div class="scan-status">${status}</div>`;
   lastScan=r;
   const rp=document.getElementById('rawPreview'); if(rp) rp.textContent=r.raw;
   renderScanOperation();
@@ -650,7 +650,7 @@ async function lookupManualPart(){
   if(!pn){toast('Masukkan Part Number.',false);return;}
   const master=CACHE.parts.find(x=>String(x.PartNumber||'').trim().toUpperCase()===pn.toUpperCase());
   if(!master){toast('Part Number tidak ditemukan di MasterPart: '+pn,false);return;}
-  const r={raw:'MANUAL:'+pn,partNumber:master.PartNumber||pn,partName:master.PartName||'',uom:master.UOM||'PCS',qty:null,batchNo:'',lot:'',po:'',date:'',dn:'',serial:'',serialNumber:'',vendor:'',plant:'',expiryDate:'',qRaw:'',fields:{},masterPartId:master.PartID,masterUom:master.UOM||'PCS',masterFound:true,manual:true};
+  const r={raw:'MANUAL:'+pn,partNumber:master.PartNumber||pn,partName:master.PartName||'',uom:master.UOM||'PCS',qty:null,batchNo:'',lot:'',po:'',date:'',dn:'',serial:'',serialNumber:'',vendor:'',plant:'',expiryDate:'',qRaw:'',fields:{},masterPartId:master.PartID,masterUom:master.UOM||'PCS',partGroup:master.PartGroup||'',masterFound:true,manual:true};
   renderScanResult(r);
   toast('Part ditemukan: '+r.partNumber);
   document.getElementById('scanRaw')?.focus();
@@ -917,7 +917,7 @@ async function deliveryPage(){
   let selected=null;
   const render=()=>{
     const q=String(document.getElementById('deliverySearch')?.value||'').trim().toLowerCase();
-    const filtered=rows.filter(x=>[x.PartNumber,x.PartName,x.BatchNo].some(v=>String(v||'').toLowerCase().includes(q)));
+    const filtered=rows.filter(x=>[x.PartNumber,x.PartName,x.PartGroup,x.BatchNo,x.LotSource,x.LotNo,x.Lot].some(v=>String(v||'').toLowerCase().includes(q)));
     const box=document.getElementById('deliveryQueue');
     box.innerHTML=filtered.length?`<div class="table-scroll"><table class="data-table"><thead><tr><th>Part Number</th><th>Part Name</th><th>Batch</th><th>Available FG</th><th>Action</th></tr></thead><tbody>${filtered.map(x=>{const i=rows.indexOf(x);return `<tr><td><b>${esc(x.PartNumber)}</b></td><td>${esc(x.PartName)}</td><td>${esc(x.BatchNo||'-')}</td><td>${fmt(x.QtyAvailable??x.QtyOnHand)}</td><td><button class="btn ghost btn-sm" type="button" onclick="selectDeliveryItem(${i})">SELECT</button></td></tr>`}).join('')}</tbody></table></div>`:'<div class="empty">Tidak ada stock FG yang tersedia untuk delivery.</div>';
   };
@@ -1008,7 +1008,7 @@ function renderTestingQueue_(){
   const box=document.getElementById('testingQueueTable'); if(!box)return;
   const rows=window._testingQueue||[]; const filter=window._testingFilter||'ALL'; const q=String(document.getElementById('testingQueueSearch')?.value||'').trim().toLowerCase();
   const filtered=rows.filter(x=>(filter==='ALL'||String(x.PartID)===filter)&&[x.PartNumber,x.PartName,x.BatchNo].some(v=>String(v||'').toLowerCase().includes(q)));
-  box.innerHTML=filtered.length?`<div class="table-scroll"><table class="data-table testing-queue-table"><thead><tr><th>Part Number</th><th>Part Name</th><th>Batch</th><th>Qty Available</th><th>Action</th></tr></thead><tbody>${filtered.map(x=>{const i=rows.indexOf(x);return `<tr id="testing-row-${i}"><td><b>${esc(x.PartNumber)}</b></td><td>${esc(x.PartName)}</td><td>${esc(x.BatchNo||'-')}</td><td>${fmt(x.QtyAvailable ?? x.QtyOnHand)}</td><td><button class="btn ghost btn-sm" onclick="selectTestingItem(${i})">SELECT</button></td></tr>`}).join('')}</tbody></table></div>`:'<div class="empty">Tidak ada item sesuai filter.</div>';
+  box.innerHTML=filtered.length?`<div class="table-scroll"><table class="data-table testing-queue-table"><thead><tr><th>Part Number</th><th>Part Name</th><th>Part Group</th><th>Batch</th><th>Lot Source</th><th>Qty Available</th><th>Action</th></tr></thead><tbody>${filtered.map(x=>{const i=rows.indexOf(x);return `<tr id="testing-row-${i}"><td><b>${esc(x.PartNumber)}</b></td><td>${esc(x.PartName)}</td><td>${esc(x.PartGroup||'-')}</td><td>${esc(x.BatchNo||'-')}</td><td>${esc(x.LotSource||x.LotNo||x.Lot||x.BatchNo||'-')}</td><td>${fmt(x.QtyAvailable ?? x.QtyOnHand)}</td><td><button class="btn ghost btn-sm" onclick="selectTestingItem(${i})">SELECT</button></td></tr>`}).join('')}</tbody></table></div>`:'<div class="empty">Tidak ada item sesuai filter.</div>';
 }
 
 function selectTestingItem(i){
@@ -1019,10 +1019,12 @@ function selectTestingItem(i){
   form.innerHTML=`
     <div class="selected-item">
       <div><small>FINISHED PRODUCT</small><b>${esc(x.PartNumber)}</b><span>${esc(x.PartName||'')}</span></div>
-      <div><small>BATCH</small><b>${esc(x.BatchNo||'-')}</b></div>
+      <div><small>PART GROUP</small><b>${esc(x.PartGroup||'-')}</b></div>
       <div><small>AVAILABLE IN TEST</small><b>${fmt(max)}</b></div>
     </div>
     <div class="form-grid">
+      ${f('Source Lot','testingSourceLot','text',`value="${esc(x.LotSource||x.LotNo||x.Lot||x.BatchNo||'')}"`)}
+      ${f('Output Testing Lot','testingOutputLot','text',`value="${esc(x.OutputTestingLot||x.TestingLot||x.LotSource||x.LotNo||x.Lot||x.BatchNo||'')}"`)}
       ${f('Testing Qty','testingQty','number',`min="0.000001" max="${max}" step="any" value="${max}"`)}
       ${f('Reference','testingRef')}
       ${f('Remarks / Reason','testingRemarks')}
@@ -1046,7 +1048,7 @@ async function postTestingResult_(x,action){
   const label=action==='testingPass'?'Testing PASS':'Testing NG';
   if(!confirm(`${label}: ${x.PartNumber} | Batch ${x.BatchNo} | Qty ${qty}?`))return;
   try{
-    const r=await apiPost(action,{username:user().Username||'admin',partId:x.PartID,qty,uom:x.UOM||'PCS',batchNo:x.BatchNo,referenceNo:v('testingRef'),remarks:v('testingRemarks'),requestId:makeRequestId()});
+    const r=await apiPost(action,{username:user().Username||'admin',partId:x.PartID,qty,uom:x.UOM||'PCS',batchNo:v('testingSourceLot')||x.BatchNo,sourceLot:v('testingSourceLot')||x.BatchNo,outputTestingLot:v('testingOutputLot')||v('testingSourceLot')||x.BatchNo,referenceNo:v('testingRef'),remarks:v('testingRemarks'),requestId:makeRequestId()});
     if(!r.success)throw new Error(r.message||label+' gagal.');
     toast(r.message||label+' berhasil.');
     await refreshStockOnly();
@@ -1054,7 +1056,7 @@ async function postTestingResult_(x,action){
   }catch(e){toast(e.message||label+' gagal.',false);}
 }
 
-function masterPartPage(){shell('Master Part','Create PartID / Part Number master',`<div class="panel quick-import"><div><b>Master Part Import</b><p class="muted">Upload banyak Master Part dari Excel tanpa input satu per satu.</p></div><div class="form-actions"><button class="btn ghost" onclick="openImport('master')">↑ Upload Excel</button><button class="btn ghost" onclick="go('import-center');setTimeout(()=>document.getElementById('downloadTemplateBtn')?.click(),0)">↓ Template</button></div></div>`+formCard([f('Part Number','mpNo'),f('Part Name','mpName'),f('Part Type','mpType','text','value="MATERIAL"'),f('Category','mpCat'),f('UOM','mpUom','text','value="PCS"'),f('Min Stock','mpMin','number','min="0"'),f('Max Stock','mpMax','number','min="0"')],'Save Master Part'));document.getElementById('saveBtn').onclick=()=>submit('saveMaster',{table:'parts',partNumber:v('mpNo'),partName:v('mpName'),partType:v('mpType'),category:v('mpCat'),uom:v('mpUom'),minStock:Number(v('mpMin')),maxStock:Number(v('mpMax'))},'Master Part')}
+function masterPartPage(){shell('Master Part','Create PartID / Part Number master',`<div class="panel quick-import"><div><b>Master Part Import</b><p class="muted">Upload banyak Master Part dari Excel tanpa input satu per satu.</p></div><div class="form-actions"><button class="btn ghost" onclick="openImport('master')">↑ Upload Excel</button><button class="btn ghost" onclick="go('import-center');setTimeout(()=>document.getElementById('downloadTemplateBtn')?.click(),0)">↓ Template</button></div></div>`+formCard([f('Part Number','mpNo'),f('Part Name','mpName'),f('Part Type','mpType','text','value="MATERIAL"'),f('Part Group','mpGroup'),f('Category','mpCat'),f('UOM','mpUom','text','value="PCS"'),f('Min Stock','mpMin','number','min="0"'),f('Max Stock','mpMax','number','min="0"')],'Save Master Part'));document.getElementById('saveBtn').onclick=()=>submit('saveMaster',{table:'parts',partNumber:v('mpNo'),partName:v('mpName'),partType:v('mpType'),partGroup:v('mpGroup'),category:v('mpCat'),uom:v('mpUom'),minStock:Number(v('mpMin')),maxStock:Number(v('mpMax'))},'Master Part')}
 function warehousePage(){shell('Warehouse','Create warehouse / location',formCard([f('Warehouse Code','whCode'),f('Warehouse Name','whName'),f('Warehouse Type','whType','text','value="STORAGE"'),fs('Parent Warehouse','whParent',sel('whParent',whs(),'None')),f('Status','whStatus','text','value="ACTIVE"')],'Save Warehouse'));document.getElementById('saveBtn').onclick=()=>submit('saveMaster',{table:'warehouses',warehouseCode:v('whCode'),warehouseName:v('whName'),warehouseType:v('whType'),parentWarehouseId:v('whParent'),status:v('whStatus')},'Warehouse')}
 function customerPage(){shell('Customer','Customer master data',formCard([f('Customer Code','cusCode'),f('Customer Name','cusName'),f('Contact','cusContact'),f('Address','cusAddress')],'Save Customer'));document.getElementById('saveBtn').onclick=()=>submit('saveMaster',{table:'customers',customerCode:v('cusCode'),customerName:v('cusName'),contact:v('cusContact'),address:v('cusAddress')},'Customer')}
 function bomPage(){shell('BOM','Bill of Material · Parent → Components',`<div class="panel quick-import"><div><b>BOM Import</b><p class="muted">Upload BOM Header + BOM Detail dari Excel. Parent dan Component Part akan dicari otomatis dari Master Part.</p></div><div class="form-actions"><button class="btn ghost" onclick="openImport('bom')">↑ Upload BOM Excel</button><button class="btn ghost" onclick="go('import-center');setTimeout(()=>{document.querySelector('.import-tab[data-type=\"bom\"]')?.click();document.getElementById('downloadTemplateBtn')?.click()},0)">↓ Template BOM</button></div></div><div class="form-card"><div class="form-grid">${fs('Parent Part','bomParent',sel('bomParent',parts()))}${f('BOM Version','bomVer','text','value="V1"')}${f('Effective Date','bomDate','date','value="'+new Date().toISOString().slice(0,10)+'"')}</div><h4 class="section-title">Components</h4><div id="bomItems"></div><button class="btn ghost" onclick="addBomItem()">+ Add Component</button><div class="form-actions"><button class="btn primary" id="saveBom">Save BOM</button></div></div>`);addBomItem();document.getElementById('saveBom').onclick=saveBom}

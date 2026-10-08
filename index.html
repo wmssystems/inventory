@@ -126,14 +126,14 @@ async function loginUser(username,password){return apiGet('login',{username,pass
 function logoutUser(){sessionStorage.removeItem('wmsUser');location.reload();}
 </script>
 <script>
-const NAV=[['MAIN',[['dashboard','⌂','Dashboard']]],['MASTER DATA',[['master-part','▦','Master Part','ADMIN'],['warehouse','▣','Warehouse','ADMIN'],['customer','◉','Customer','ADMIN'],['bom','⌬','BOM','ADMIN'],['import-center','⇧','Import Center','ADMIN']]],['INBOUND & WAREHOUSE',[['scan','⌖','Scan / Operation'],['receiving','↓','Receiving'],['stock','▤','Stock'],['transfer','⇄','Transfer'],['issue','→','Issue Material']]],['PRODUCTION & QUALITY',[['production','⚙','Production'],['testing','✓','Testing / QC']]],['SHIPPING',[['delivery','□','FG Delivery']]],['CONTROL & REPORT',[['stock-summary','▥','Stock Summary'],['stock-opname','⊙','Stock Opname'],['transactions','≡','Transactions']]]];
-const META={scan:['Scan / Operation','Full-screen QR / Barcode operation'],dashboard:['Dashboard','Inventory Control & Warehouse Overview'], 'master-part':['Master Part','MasterPart'],warehouse:['Warehouse','Warehouse & Location'],customer:['Customer','Customer Master'],bom:['BOM','Bill of Material'],receiving:['Receiving','Supplier → STG'],stock:['Stock','All Warehouse · Filter by Warehouse'], 'stock-summary':['Stock Summary','Material stock by item · WH-L2 + WH-IN'],transfer:['Transfer','Warehouse Movement'],issue:['Issue Material','Warehouse → PROD'],production:['Production','Sub Assembly & Finish Product'],testing:['Testing / QC','PASS → FG | NG → HOLD'],'material-ng':['Material NG','PROD → MAT-NG'],hold:['Product Hold','TEST → HOLD'],delivery:['FG Delivery','FG → Customer'],'stock-opname':['Stock Opname','Physical Stock Validation'],transactions:['Transactions','Traceability']};
+const NAV=[['MAIN',[['dashboard','⌂','Dashboard']]],['MASTER DATA',[['master-part','▦','Master Part','ADMIN'],['warehouse','▣','Warehouse','ADMIN'],['customer','◉','Customer','ADMIN'],['bom','⌬','BOM','ADMIN'],['import-center','⇧','Import Center','ADMIN']]],['INBOUND & WAREHOUSE',[['scan','⌖','Scan / Operation'],['receiving','↓','Receiving'],['stock','▤','Stock'],['transfer','⇄','Transfer'],['issue','→','Issue Material']]],['PRODUCTION & QUALITY',[['production','⚙','Production'],['testing','✓','Testing / QC']]],['SHIPPING',[['delivery','□','FG Delivery']]],['CONTROL & REPORT',[['stock-summary','▥','Stock Summary'],['stock-opname','⊙','Stock Opname'],['stock-opname-report','▤','Report Stock Opname'],['delivery-summary','▥','Summary Delivery'],['stock-card','▤','Stock Card'],['transaction-summary','▤','Summary Transaction'],['transaction-revision','✎','Revisi Transaction','ADMIN'],['transactions','≡','Transactions']]]];
+const META={scan:['Scan / Operation','Full-screen QR / Barcode operation'],dashboard:['Dashboard','Inventory Control & Warehouse Overview'], 'master-part':['Master Part','MasterPart'],warehouse:['Warehouse','Warehouse & Location'],customer:['Customer','Customer Master'],bom:['BOM','Bill of Material'],receiving:['Receiving','Supplier → STG'],stock:['Stock','All Warehouse · Filter by Warehouse'], 'stock-summary':['Stock Summary','Material stock by item · WH-L2 + WH-IN'],transfer:['Transfer','Warehouse Movement'],issue:['Issue Material','Warehouse → PROD'],production:['Production','Sub Assembly & Finish Product'],testing:['Testing / QC','PASS → FG | NG → HOLD'],'material-ng':['Material NG','PROD → MAT-NG'],hold:['Product Hold','TEST → HOLD'],delivery:['FG Delivery','FG → Customer'],'stock-opname':['Stock Opname','Physical Stock Validation'],'stock-opname-report':['Report Stock Opname','Opname result, system vs physical, and discrepancy'],'delivery-summary':['Summary Delivery','Delivery summary by date, customer, and finished good'],'stock-card':['Stock Card','Pergerakan stock per Part + Warehouse + Batch'],'transaction-summary':['Summary Transaction','Summary and export all WMS transactions'],'transaction-revision':['Revisi Transaction','ADMIN only · reversal transaction with stock rollback'],transactions:['Transactions','Traceability']};
 let CACHE={parts:[],warehouses:[],customers:[],stock:[],productionParts:{subAssembly:[],finishedGood:[]}};
 function esc(x){return String(x??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));} function fmt(x){return Number(x||0).toLocaleString('id-ID');}
 function toast(msg,ok=true){const t=document.getElementById('toast');t.textContent=msg;t.className='toast '+(ok?'ok':'err')+' show';setTimeout(()=>t.className='toast',3000)}
 function user(){try{return JSON.parse(sessionStorage.getItem('wmsUser')||'{}')}catch{return {}}}
 function isAdmin(){return String(user().Role||'').trim().toUpperCase()==='ADMIN'}
-function canAccessPage(page){if(isAdmin())return true;return !['master-part','warehouse','customer','bom','import-center'].includes(page)}
+function canAccessPage(page){if(isAdmin())return true;return !['master-part','warehouse','customer','bom','import-center','transaction-revision'].includes(page)}
 function buildNav(){
   const admin=isAdmin();
   const nav=document.getElementById('nav');
@@ -159,11 +159,11 @@ function buildNav(){
 }
 async function loadCache(){const jobs=[['parts','parts'],['warehouses','warehouses'],['customers','customers'],['stock','stock'],['productionParts','productionParts']];const results=await Promise.all(jobs.map(async([k,a])=>{try{return [k,await apiGet(a)]}catch(e){return [k,{success:false,error:e}]}}));results.forEach(([k,r])=>{if(r.success)CACHE[k]=r.data||[]});}
 function openNavSectionFor(page){const b=document.querySelector(`.nav-item[data-page="${page}"]`);if(!b)return;const sec=b.closest('.nav-section');if(!sec)return;const group=sec.querySelector('.nav-group');const head=sec.querySelector('.nav-sec');if(group&&!group.classList.contains('open')){group.classList.add('open');head.classList.add('open');}}
-function go(page){openNavSectionFor(page);if(!canAccessPage(page)){toast('Akses ditolak. Menu ini khusus ADMIN.',false);return;}if(page!=='scan'&&document.getElementById('scanPageWrap')?.classList.contains('scan-fullscreen-wrap')){exitScanFullscreen();}const m=META[page]||META.dashboard;document.getElementById('pageTitle').textContent=m[0];document.getElementById('pageSub').textContent=m[1];document.querySelectorAll('.nav-item').forEach(x=>x.classList.toggle('active',x.dataset.page===page));document.getElementById('nav').classList.remove('open');if(page==='dashboard')dashboard();else if(page==='scan')scanPage();else if(page==='stock')stockPage();else if(page==='stock-summary')stockSummaryPage();else if(page==='transactions')txPage();else if(page==='receiving')receivingPage();else if(page==='transfer')transferPage();else if(page==='issue')issuePage();else if(page==='production')productionPage();else if(page==='testing')testingPage();else if(page==='delivery')deliveryPage();else if(page==='stock-opname')opnamePage();else if(page==='master-part')masterPartPage();else if(page==='warehouse')warehousePage();else if(page==='customer')customerPage();else if(page==='bom')bomPage();else if(page==='import-center')importCenterPage();}
+function go(page){openNavSectionFor(page);if(!canAccessPage(page)){toast('Akses ditolak. Menu ini khusus ADMIN.',false);return;}if(page!=='scan'&&document.getElementById('scanPageWrap')?.classList.contains('scan-fullscreen-wrap')){exitScanFullscreen();}const m=META[page]||META.dashboard;document.getElementById('pageTitle').textContent=m[0];document.getElementById('pageSub').textContent=m[1];document.querySelectorAll('.nav-item').forEach(x=>x.classList.toggle('active',x.dataset.page===page));document.getElementById('nav').classList.remove('open');if(page==='dashboard')dashboard();else if(page==='scan')scanPage();else if(page==='stock')stockPage();else if(page==='stock-summary')stockSummaryPage();else if(page==='stock-card')stockCardPage();else if(page==='transactions')txPage();else if(page==='receiving')receivingPage();else if(page==='transfer')transferPage();else if(page==='issue')issuePage();else if(page==='production')productionPage();else if(page==='testing')testingPage();else if(page==='delivery')deliveryPage();else if(page==='stock-opname')opnamePage();else if(page==='stock-opname-report')stockOpnameReportPage();else if(page==='delivery-summary')deliverySummaryPage();else if(page==='transaction-summary')transactionSummaryPage();else if(page==='transaction-revision')transactionRevisionPage();else if(page==='master-part')masterPartPage();else if(page==='warehouse')warehousePage();else if(page==='customer')customerPage();else if(page==='bom')bomPage();else if(page==='import-center')importCenterPage();}
 function shell(title,desc,body,action=''){document.getElementById('content').innerHTML=`<div class="page-head"><div><h3>${title}</h3><p>${desc}</p></div>${action}</div>${body}`}
 function sel(name,items,placeholder='Select...'){return `<select id="${name}"><option value="">${placeholder}</option>${items.map(x=>`<option value="${esc(x.id)}">${esc(x.label)}</option>`).join('')}</select>`}
 function parts(){return CACHE.parts.map(x=>({id:x.PartID,label:`${x.PartNumber} — ${x.PartName||''}`}));}
-function materialParts(){return CACHE.parts.filter(x=>String(x.PartType||'').trim().toUpperCase().replace(/[-\s]+/g,'_')==='MATERIAL').map(x=>({id:x.PartID,label:`${x.PartNumber} — ${x.PartName||''}${x.PartGroup?' — '+x.PartGroup:''}`}));}
+function materialParts(){return CACHE.parts.filter(x=>String(x.PartType||'').trim().toUpperCase().replace(/[-\s]+/g,'_')==='MATERIAL').map(x=>({id:x.PartID,label:`${x.PartNumber} — ${x.PartName||''}`}));}
 function productionParts(kind){
   const list = CACHE.productionParts?.[kind] || [];
   return list.map(x=>({id:x.PartID,label:`${x.PartNumber} — ${x.PartName||''}`}));
@@ -523,7 +523,7 @@ function parseWmsQR(raw){
 }
 
 function handleInlineScan(prefix,op,raw){if(!raw)return;try{const r=parseWmsQR(raw);window._inlineScans=window._inlineScans||{};window._inlineScans[prefix]=r;const ok=applyScanToTransaction(prefix,op,r);if(ok)toast('Scan berhasil: '+r.partNumber+(r.qty!==null?' | Qty '+r.qty:''));}catch(e){setScanStatus(prefix,e.message||'Format QR tidak valid.',false);toast(e.message||'Format QR tidak valid.',false)}}
-function lookupInlinePart(prefix,op){const pn=String(document.getElementById(prefix+'ManualPart')?.value||'').trim();if(!pn){toast('Masukkan Part Number.',false);return;}const master=CACHE.parts.find(x=>String(x.PartNumber||'').trim().toUpperCase()===pn.toUpperCase());if(!master){setScanStatus(prefix,'Part Number tidak ditemukan di MasterPart: '+pn,false);toast('Part Number tidak ditemukan di MasterPart.',false);return;}if(['receive','transfer','issue'].includes(op)){const mt=String(master.PartType||'').trim().toUpperCase().replace(/[-\s]+/g,'_');if(mt!=='MATERIAL'){setScanStatus(prefix,'Hanya MATERIAL yang boleh digunakan untuk Receiving / Transfer / Issue.',false);toast('Part bukan MATERIAL.',false);return;}}const r={raw:'MANUAL:'+pn,partNumber:master.PartNumber||pn,partName:master.PartName||'',uom:master.UOM||'PCS',qty:null,batchNo:'',lot:'',po:'',date:'',dn:'',serial:'',serialNumber:'',vendor:'',plant:'',expiryDate:'',qRaw:'',fields:{},masterPartId:master.PartID,masterUom:master.UOM||'PCS',partGroup:master.PartGroup||'',masterFound:true,manual:true};window._inlineScans=window._inlineScans||{};window._inlineScans[prefix]=r;applyScanToTransaction(prefix,op,r);toast('Part ditemukan: '+r.partNumber);}
+function lookupInlinePart(prefix,op){const pn=String(document.getElementById(prefix+'ManualPart')?.value||'').trim();if(!pn){toast('Masukkan Part Number.',false);return;}const master=CACHE.parts.find(x=>String(x.PartNumber||'').trim().toUpperCase()===pn.toUpperCase());if(!master){setScanStatus(prefix,'Part Number tidak ditemukan di MasterPart: '+pn,false);toast('Part Number tidak ditemukan di MasterPart.',false);return;}if(['receive','transfer','issue'].includes(op)){const mt=String(master.PartType||'').trim().toUpperCase().replace(/[-\s]+/g,'_');if(mt!=='MATERIAL'){setScanStatus(prefix,'Hanya MATERIAL yang boleh digunakan untuk Receiving / Transfer / Issue.',false);toast('Part bukan MATERIAL.',false);return;}}const r={raw:'MANUAL:'+pn,partNumber:master.PartNumber||pn,partName:master.PartName||'',uom:master.UOM||'PCS',qty:null,batchNo:'',lot:'',po:'',date:'',dn:'',serial:'',serialNumber:'',vendor:'',plant:'',expiryDate:'',qRaw:'',fields:{},masterPartId:master.PartID,masterUom:master.UOM||'PCS',masterFound:true,manual:true};window._inlineScans=window._inlineScans||{};window._inlineScans[prefix]=r;applyScanToTransaction(prefix,op,r);toast('Part ditemukan: '+r.partNumber);}
 let inlineScanner=null;
 async function startInlineCamera(prefix,op){
   if(!window.Html5Qrcode){toast('Library kamera belum tersedia.',false);return;}
@@ -639,7 +639,7 @@ const SCAN_OPS={
 };
 function renderScanResult(r){
   const status=r.masterFound?'<span class="pill ok">MASTER OK</span>':'<span class="pill err">PART BELUM TERDAFTAR</span>';
-  document.getElementById('scanResult').innerHTML=`<div class="scan-result-grid"><div><small>Part Number</small><b>${esc(r.partNumber)}</b></div><div><small>Part Name</small><b>${esc(r.partName||'-')}</b></div><div><small>Part Group</small><b>${esc(r.partGroup||'-')}</b></div><div><small>Qty Scan</small><b>${r.qty===null?'-':fmt(r.qty)}</b></div><div><small>Q Raw</small><b>${esc(r.qRaw||'-')}</b></div><div><small>UOM</small><b>${esc(r.uom||'-')}</b></div><div><small>Batch Number</small><b>${esc(r.batchNo||'-')}</b></div><div><small>Lot</small><b>${esc(r.lot||'-')}</b></div><div><small>PO</small><b>${esc(r.po||'-')}</b></div><div><small>Date</small><b>${esc(r.date||'-')}</b></div><div><small>Expiry / YX</small><b>${esc(r.expiryDate||'-')}</b></div><div><small>Delivery Note</small><b>${esc(r.dn||'-')}</b></div><div><small>Serial / S</small><b>${esc(r.serial||'-')}</b></div><div><small>Serial Number / SN</small><b>${esc(r.serialNumber||'-')}</b></div><div><small>Vendor / V</small><b>${esc(r.vendor||'-')}</b></div><div><small>Plant / P</small><b>${esc(r.plant||'-')}</b></div></div><div class="scan-status">${status}</div>`;
+  document.getElementById('scanResult').innerHTML=`<div class="scan-result-grid"><div><small>Part Number</small><b>${esc(r.partNumber)}</b></div><div><small>Part Name</small><b>${esc(r.partName||'-')}</b></div><div><small>Qty Scan</small><b>${r.qty===null?'-':fmt(r.qty)}</b></div><div><small>Q Raw</small><b>${esc(r.qRaw||'-')}</b></div><div><small>UOM</small><b>${esc(r.uom||'-')}</b></div><div><small>Batch Number</small><b>${esc(r.batchNo||'-')}</b></div><div><small>Lot</small><b>${esc(r.lot||'-')}</b></div><div><small>PO</small><b>${esc(r.po||'-')}</b></div><div><small>Date</small><b>${esc(r.date||'-')}</b></div><div><small>Expiry / YX</small><b>${esc(r.expiryDate||'-')}</b></div><div><small>Delivery Note</small><b>${esc(r.dn||'-')}</b></div><div><small>Serial / S</small><b>${esc(r.serial||'-')}</b></div><div><small>Serial Number / SN</small><b>${esc(r.serialNumber||'-')}</b></div><div><small>Vendor / V</small><b>${esc(r.vendor||'-')}</b></div><div><small>Plant / P</small><b>${esc(r.plant||'-')}</b></div></div><div class="scan-status">${status}</div>`;
   lastScan=r;
   const rp=document.getElementById('rawPreview'); if(rp) rp.textContent=r.raw;
   renderScanOperation();
@@ -650,7 +650,7 @@ async function lookupManualPart(){
   if(!pn){toast('Masukkan Part Number.',false);return;}
   const master=CACHE.parts.find(x=>String(x.PartNumber||'').trim().toUpperCase()===pn.toUpperCase());
   if(!master){toast('Part Number tidak ditemukan di MasterPart: '+pn,false);return;}
-  const r={raw:'MANUAL:'+pn,partNumber:master.PartNumber||pn,partName:master.PartName||'',uom:master.UOM||'PCS',qty:null,batchNo:'',lot:'',po:'',date:'',dn:'',serial:'',serialNumber:'',vendor:'',plant:'',expiryDate:'',qRaw:'',fields:{},masterPartId:master.PartID,masterUom:master.UOM||'PCS',partGroup:master.PartGroup||'',masterFound:true,manual:true};
+  const r={raw:'MANUAL:'+pn,partNumber:master.PartNumber||pn,partName:master.PartName||'',uom:master.UOM||'PCS',qty:null,batchNo:'',lot:'',po:'',date:'',dn:'',serial:'',serialNumber:'',vendor:'',plant:'',expiryDate:'',qRaw:'',fields:{},masterPartId:master.PartID,masterUom:master.UOM||'PCS',masterFound:true,manual:true};
   renderScanResult(r);
   toast('Part ditemukan: '+r.partNumber);
   document.getElementById('scanRaw')?.focus();
@@ -917,7 +917,7 @@ async function deliveryPage(){
   let selected=null;
   const render=()=>{
     const q=String(document.getElementById('deliverySearch')?.value||'').trim().toLowerCase();
-    const filtered=rows.filter(x=>[x.PartNumber,x.PartName,x.PartGroup,x.BatchNo,x.LotSource,x.LotNo,x.Lot].some(v=>String(v||'').toLowerCase().includes(q)));
+    const filtered=rows.filter(x=>[x.PartNumber,x.PartName,x.BatchNo].some(v=>String(v||'').toLowerCase().includes(q)));
     const box=document.getElementById('deliveryQueue');
     box.innerHTML=filtered.length?`<div class="table-scroll"><table class="data-table"><thead><tr><th>Part Number</th><th>Part Name</th><th>Batch</th><th>Available FG</th><th>Action</th></tr></thead><tbody>${filtered.map(x=>{const i=rows.indexOf(x);return `<tr><td><b>${esc(x.PartNumber)}</b></td><td>${esc(x.PartName)}</td><td>${esc(x.BatchNo||'-')}</td><td>${fmt(x.QtyAvailable??x.QtyOnHand)}</td><td><button class="btn ghost btn-sm" type="button" onclick="selectDeliveryItem(${i})">SELECT</button></td></tr>`}).join('')}</tbody></table></div>`:'<div class="empty">Tidak ada stock FG yang tersedia untuk delivery.</div>';
   };
@@ -1008,7 +1008,7 @@ function renderTestingQueue_(){
   const box=document.getElementById('testingQueueTable'); if(!box)return;
   const rows=window._testingQueue||[]; const filter=window._testingFilter||'ALL'; const q=String(document.getElementById('testingQueueSearch')?.value||'').trim().toLowerCase();
   const filtered=rows.filter(x=>(filter==='ALL'||String(x.PartID)===filter)&&[x.PartNumber,x.PartName,x.BatchNo].some(v=>String(v||'').toLowerCase().includes(q)));
-  box.innerHTML=filtered.length?`<div class="table-scroll"><table class="data-table testing-queue-table"><thead><tr><th>Part Number</th><th>Part Name</th><th>Part Group</th><th>Batch</th><th>Lot Source</th><th>Qty Available</th><th>Action</th></tr></thead><tbody>${filtered.map(x=>{const i=rows.indexOf(x);return `<tr id="testing-row-${i}"><td><b>${esc(x.PartNumber)}</b></td><td>${esc(x.PartName)}</td><td>${esc(x.PartGroup||'-')}</td><td>${esc(x.BatchNo||'-')}</td><td>${esc(x.LotSource||x.LotNo||x.Lot||x.BatchNo||'-')}</td><td>${fmt(x.QtyAvailable ?? x.QtyOnHand)}</td><td><button class="btn ghost btn-sm" onclick="selectTestingItem(${i})">SELECT</button></td></tr>`}).join('')}</tbody></table></div>`:'<div class="empty">Tidak ada item sesuai filter.</div>';
+  box.innerHTML=filtered.length?`<div class="table-scroll"><table class="data-table testing-queue-table"><thead><tr><th>Part Number</th><th>Part Name</th><th>Batch</th><th>Qty Available</th><th>Action</th></tr></thead><tbody>${filtered.map(x=>{const i=rows.indexOf(x);return `<tr id="testing-row-${i}"><td><b>${esc(x.PartNumber)}</b></td><td>${esc(x.PartName)}</td><td>${esc(x.BatchNo||'-')}</td><td>${fmt(x.QtyAvailable ?? x.QtyOnHand)}</td><td><button class="btn ghost btn-sm" onclick="selectTestingItem(${i})">SELECT</button></td></tr>`}).join('')}</tbody></table></div>`:'<div class="empty">Tidak ada item sesuai filter.</div>';
 }
 
 function selectTestingItem(i){
@@ -1019,12 +1019,10 @@ function selectTestingItem(i){
   form.innerHTML=`
     <div class="selected-item">
       <div><small>FINISHED PRODUCT</small><b>${esc(x.PartNumber)}</b><span>${esc(x.PartName||'')}</span></div>
-      <div><small>PART GROUP</small><b>${esc(x.PartGroup||'-')}</b></div>
+      <div><small>BATCH</small><b>${esc(x.BatchNo||'-')}</b></div>
       <div><small>AVAILABLE IN TEST</small><b>${fmt(max)}</b></div>
     </div>
     <div class="form-grid">
-      ${f('Source Lot','testingSourceLot','text',`value="${esc(x.LotSource||x.LotNo||x.Lot||x.BatchNo||'')}"`)}
-      ${f('Output Testing Lot','testingOutputLot','text',`value="${esc(x.OutputTestingLot||x.TestingLot||x.LotSource||x.LotNo||x.Lot||x.BatchNo||'')}"`)}
       ${f('Testing Qty','testingQty','number',`min="0.000001" max="${max}" step="any" value="${max}"`)}
       ${f('Reference','testingRef')}
       ${f('Remarks / Reason','testingRemarks')}
@@ -1048,7 +1046,7 @@ async function postTestingResult_(x,action){
   const label=action==='testingPass'?'Testing PASS':'Testing NG';
   if(!confirm(`${label}: ${x.PartNumber} | Batch ${x.BatchNo} | Qty ${qty}?`))return;
   try{
-    const r=await apiPost(action,{username:user().Username||'admin',partId:x.PartID,qty,uom:x.UOM||'PCS',batchNo:v('testingSourceLot')||x.BatchNo,sourceLot:v('testingSourceLot')||x.BatchNo,outputTestingLot:v('testingOutputLot')||v('testingSourceLot')||x.BatchNo,referenceNo:v('testingRef'),remarks:v('testingRemarks'),requestId:makeRequestId()});
+    const r=await apiPost(action,{username:user().Username||'admin',partId:x.PartID,qty,uom:x.UOM||'PCS',batchNo:x.BatchNo,referenceNo:v('testingRef'),remarks:v('testingRemarks'),requestId:makeRequestId()});
     if(!r.success)throw new Error(r.message||label+' gagal.');
     toast(r.message||label+' berhasil.');
     await refreshStockOnly();
@@ -1056,7 +1054,530 @@ async function postTestingResult_(x,action){
   }catch(e){toast(e.message||label+' gagal.',false);}
 }
 
-function masterPartPage(){shell('Master Part','Create PartID / Part Number master',`<div class="panel quick-import"><div><b>Master Part Import</b><p class="muted">Upload banyak Master Part dari Excel tanpa input satu per satu.</p></div><div class="form-actions"><button class="btn ghost" onclick="openImport('master')">↑ Upload Excel</button><button class="btn ghost" onclick="go('import-center');setTimeout(()=>document.getElementById('downloadTemplateBtn')?.click(),0)">↓ Template</button></div></div>`+formCard([f('Part Number','mpNo'),f('Part Name','mpName'),f('Part Type','mpType','text','value="MATERIAL"'),f('Part Group','mpGroup'),f('Category','mpCat'),f('UOM','mpUom','text','value="PCS"'),f('Min Stock','mpMin','number','min="0"'),f('Max Stock','mpMax','number','min="0"')],'Save Master Part'));document.getElementById('saveBtn').onclick=()=>submit('saveMaster',{table:'parts',partNumber:v('mpNo'),partName:v('mpName'),partType:v('mpType'),partGroup:v('mpGroup'),category:v('mpCat'),uom:v('mpUom'),minStock:Number(v('mpMin')),maxStock:Number(v('mpMax'))},'Master Part')}
+function opnamePage(){
+  shell('Stock Opname','Upload Excel → System Validation → Review → Post',`
+    <div class="panel quick-import">
+      <div>
+        <b>Stock Opname by Excel</b>
+        <p class="muted">Upload hasil stock count. Sistem akan mencari Part Number, Warehouse dan Batch ke database, mengambil System Qty, menghitung Difference, serta menolak data yang tidak valid sebelum POST.</p>
+      </div>
+      <div class="form-actions">
+        <button class="btn ghost" type="button" id="downloadOpnameTemplate">↓ Download Template</button>
+        <label class="btn primary" style="cursor:pointer;margin:0">
+          ↑ Upload Excel
+          <input id="opnameExcelFile" type="file" accept=".xlsx,.xls,.csv" style="display:none">
+        </label>
+      </div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head"><h4>Validation Status</h4><span id="opnameValidationBadge" class="role-badge">WAITING FILE</span></div>
+      <div class="import-summary" id="opnameSummary">
+        <div><small>Total Row</small><b id="opTotal">0</b></div>
+        <div><small>Valid</small><b id="opValid">0</b></div>
+        <div><small>Error</small><b id="opErrors">0</b></div>
+        <div><small>Difference</small><b id="opDiffCount">0</b></div>
+      </div>
+      <div id="opnameValidationMessage" class="empty">Upload file Stock Opname untuk mulai validasi.</div>
+    </div>
+
+    <div class="panel">
+      <div class="panel-head">
+        <div><h4>Preview & Validation Result</h4><p class="muted">System Qty berasal dari InventoryBalance saat file divalidasi.</p></div>
+        <button class="btn primary" type="button" id="postUploadedOpname" disabled>POST STOCK OPNAME</button>
+      </div>
+      <div class="table-scroll" id="opnameUploadPreview"><div class="empty">Belum ada file.</div></div>
+    </div>
+
+    <div class="panel">
+      <h4>Format Excel</h4>
+      <div class="scroll"><table class="data-table"><thead><tr><th>Column</th><th>Wajib</th><th>Keterangan</th></tr></thead><tbody>
+        <tr><td>OpnameNo</td><td>Ya</td><td>Nomor stock opname; satu file dapat memakai nomor yang sama.</td></tr>
+        <tr><td>OpnameDate</td><td>Ya</td><td>Tanggal opname.</td></tr>
+        <tr><td>Warehouse</td><td>Ya</td><td>Kode warehouse, contoh WH-L2.</td></tr>
+        <tr><td>PartNumber</td><td>Ya</td><td>Harus terdaftar di MasterPart.</td></tr>
+        <tr><td>BatchNo</td><td>Tidak</td><td>Batch fisik; kosong diperbolehkan jika stock menggunakan batch kosong.</td></tr>
+        <tr><td>PhysicalQty</td><td>Ya</td><td>Hasil hitung fisik. Tidak boleh negatif.</td></tr>
+        <tr><td>UOM</td><td>Tidak</td><td>Jika kosong, sistem memakai UOM MasterPart.</td></tr>
+        <tr><td>Remarks</td><td>Tidak</td><td>Catatan opname.</td></tr>
+      </tbody></table></div>
+    </div>
+  `);
+
+  window._uploadedOpnameRows=[];
+  window._uploadedOpnameValidRows=[];
+  const file=document.getElementById('opnameExcelFile');
+  file.onchange=handleOpnameExcel;
+  document.getElementById('downloadOpnameTemplate').onclick=downloadOpnameTemplate;
+  document.getElementById('postUploadedOpname').onclick=postUploadedOpname;
+}
+
+function opnameTemplateRows(){
+  return [
+    ['OpnameNo','OpnameDate','Warehouse','PartNumber','BatchNo','PhysicalQty','UOM','Remarks'],
+    ['OPN-001','2026-10-08','WH-L2','14544435-00','B001',100,'PCS','Stock count area A']
+  ];
+}
+function downloadOpnameTemplate(){
+  const ws=XLSX.utils.aoa_to_sheet(opnameTemplateRows());
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,'StockOpname');
+  XLSX.writeFile(wb,'WMS_Stock_Opname_Template.xlsx');
+}
+function normalizeOpnameHeader(x){
+  return String(x??'').trim().replace(/\s+/g,'').toLowerCase();
+}
+function opnameCell_(row,name){
+  const target=normalizeOpnameHeader(name);
+  const key=Object.keys(row||{}).find(k=>normalizeOpnameHeader(k)===target);
+  return key===undefined?'':row[key];
+}
+function opnameDate_(value){
+  if(value instanceof Date && !isNaN(value.getTime())) return value.toISOString().slice(0,10);
+  const s=String(value??'').trim();
+  if(/^\d{4}-\d{2}-\d{2}/.test(s)) return s.slice(0,10);
+  if(/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(s)){
+    const [d,m,y]=s.split('/'); return `${y}-${String(m).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+  }
+  return s;
+}
+function normalizeOpnameUploadRows(rows){
+  return rows.map((r,i)=>({
+    _row:i+2,
+    opnameNo:String(opnameCell_(r,'OpnameNo')||'').trim(),
+    opnameDate:opnameDate_(opnameCell_(r,'OpnameDate')),
+    warehouse:String(opnameCell_(r,'Warehouse')||'').trim(),
+    partNumber:String(opnameCell_(r,'PartNumber')||'').trim(),
+    batchNo:String(opnameCell_(r,'BatchNo')||'').trim(),
+    physicalQty:opnameCell_(r,'PhysicalQty'),
+    uom:String(opnameCell_(r,'UOM')||'').trim(),
+    remarks:String(opnameCell_(r,'Remarks')||'').trim()
+  })).filter(x=>x.opnameNo||x.opnameDate||x.warehouse||x.partNumber||x.batchNo||String(x.physicalQty??'').trim()!=='');
+}
+function findOpnameSystemQty_(partId,warehouseId,batchNo){
+  const stock=(CACHE.stock||[]).find(x=>String(x.PartID||'').trim()===String(partId).trim() && String(x.WarehouseID||'').trim()===String(warehouseId).trim() && String(x.BatchNo??'').trim()===String(batchNo??'').trim());
+  return Number(stock?.QtyOnHand||0);
+}
+function validateUploadedOpnameRows(rows){
+  const errors=[];const valid=[];const seen=new Set();
+  const warehouses=CACHE.warehouses||[];const parts=CACHE.parts||[];
+  const whByCode=new Map(warehouses.map(w=>[String(w.WarehouseCode||'').trim().toUpperCase(),w]));
+  const partByNo=new Map(parts.map(p=>[String(p.PartNumber||'').trim().toUpperCase(),p]));
+  rows.forEach(r=>{
+    const rowErrors=[];
+    if(!r.opnameNo)rowErrors.push('OpnameNo wajib');
+    if(!r.opnameDate || isNaN(new Date(r.opnameDate).getTime()))rowErrors.push('OpnameDate tidak valid');
+    const wh=whByCode.get(r.warehouse.toUpperCase());
+    if(!r.warehouse)rowErrors.push('Warehouse wajib'); else if(!wh)rowErrors.push('Warehouse tidak ditemukan');
+    const part=partByNo.get(r.partNumber.toUpperCase());
+    if(!r.partNumber)rowErrors.push('PartNumber wajib'); else if(!part)rowErrors.push('PartNumber tidak ditemukan di MasterPart');
+    const physical=Number(r.physicalQty);
+    if(String(r.physicalQty??'').trim()==='' || !Number.isFinite(physical) || physical<0)rowErrors.push('PhysicalQty harus angka >= 0');
+    const key=(r.warehouse.toUpperCase())+'|'+r.partNumber.toUpperCase()+'|'+r.batchNo.toUpperCase();
+    if(seen.has(key))rowErrors.push('Duplicate Warehouse + PartNumber + BatchNo'); else seen.add(key);
+    const systemQty=(wh&&part)?findOpnameSystemQty_(part.PartID,wh.WarehouseID,r.batchNo):0;
+    const diff=Number.isFinite(physical)?physical-systemQty:0;
+    const item={...r,warehouseId:wh?.WarehouseID||'',partId:part?.PartID||'',partName:part?.PartName||'',systemQty,uom:r.uom||part?.UOM||'PCS',difference:diff,errors:rowErrors};
+    if(rowErrors.length)errors.push(item); else valid.push(item);
+  });
+  return {errors,valid,all:[...valid,...errors]};
+}
+function renderUploadedOpnameValidation(result){
+  const all=result.all||[];const diffCount=all.filter(x=>!x.errors.length&&Number(x.difference)!==0).length;
+  document.getElementById('opTotal').textContent=all.length;
+  document.getElementById('opValid').textContent=result.valid.length;
+  document.getElementById('opErrors').textContent=result.errors.length;
+  document.getElementById('opDiffCount').textContent=diffCount;
+  const badge=document.getElementById('opnameValidationBadge');
+  badge.textContent=result.errors.length?'VALIDATION ERROR':'VALIDATION OK';
+  badge.className='role-badge '+(result.errors.length?'danger':'ok');
+  const msg=document.getElementById('opnameValidationMessage');
+  msg.className=result.errors.length?'error':'system-ok';
+  msg.textContent=result.errors.length?`File ditolak: ${result.errors.length} row harus diperbaiki sebelum POST.`:`Validasi berhasil: ${result.valid.length} row siap POST. ${diffCount} row memiliki selisih dan akan dibuat sebagai STOCK_ADJUSTMENT.`;
+  const h=`<table class="data-table"><thead><tr><th>Row</th><th>OpnameNo</th><th>Warehouse</th><th>Part Number</th><th>Part Name</th><th>Batch</th><th>System Qty</th><th>Physical Qty</th><th>Difference</th><th>UOM</th><th>Validation</th></tr></thead><tbody>`+
+    all.map(x=>`<tr class="${x.errors.length?'row-error':''}"><td>${x._row}</td><td>${esc(x.opnameNo)}</td><td>${esc(x.warehouse)}</td><td>${esc(x.partNumber)}</td><td>${esc(x.partName||'-')}</td><td>${esc(x.batchNo||'-')}</td><td>${fmt(x.systemQty)}</td><td>${fmt(x.physicalQty)}</td><td>${fmt(x.difference)}</td><td>${esc(x.uom)}</td><td>${esc(x.errors.length?x.errors.join('; '):'OK')}</td></tr>`).join('')+
+    `</tbody></table>`;
+  document.getElementById('opnameUploadPreview').innerHTML=h;
+  document.getElementById('postUploadedOpname').disabled=!!result.errors.length || !result.valid.length;
+  window._uploadedOpnameValidRows=result.valid;
+}
+function handleOpnameExcel(e){
+  const file=e.target.files?.[0];if(!file)return;
+  const reader=new FileReader();
+  reader.onload=ev=>{
+    try{
+      const wb=XLSX.read(ev.target.result,{type:'array',cellDates:true});
+      const sheet=wb.Sheets[wb.SheetNames[0]];
+      const raw=XLSX.utils.sheet_to_json(sheet,{defval:''});
+      const required=['OpnameNo','OpnameDate','Warehouse','PartNumber','BatchNo','PhysicalQty','UOM','Remarks'];
+      const headers=(XLSX.utils.sheet_to_json(sheet,{header:1,defval:''})[0]||[]).map(normalizeOpnameHeader);
+      const missing=required.filter(x=>!headers.includes(normalizeOpnameHeader(x)));
+      if(missing.length){
+        document.getElementById('opnameValidationMessage').className='error';
+        document.getElementById('opnameValidationMessage').textContent='Kolom wajib tidak ditemukan: '+missing.join(', ');
+        document.getElementById('postUploadedOpname').disabled=true;return;
+      }
+      window._uploadedOpnameRows=normalizeOpnameUploadRows(raw);
+      const result=validateUploadedOpnameRows(window._uploadedOpnameRows);
+      renderUploadedOpnameValidation(result);
+    }catch(err){
+      toast('Excel Stock Opname gagal dibaca: '+err.message,false);
+      document.getElementById('postUploadedOpname').disabled=true;
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+async function postUploadedOpname(){
+  const rows=window._uploadedOpnameValidRows||[];
+  if(!rows.length){toast('Belum ada data Stock Opname yang valid.',false);return;}
+  const groups={};
+  rows.forEach(r=>{const key=r.opnameNo+'|'+r.opnameDate+'|'+r.warehouseId;(groups[key] ||= []).push(r);});
+  const keys=Object.keys(groups);
+  if(keys.length!==1){toast('Untuk POST, satu file harus memiliki 1 OpnameNo + 1 tanggal + 1 warehouse. Pisahkan file jika berbeda.',false);return;}
+  const g=groups[keys[0]];const first=g[0];
+  if(!confirm(`POST Stock Opname ${first.opnameNo} | ${first.warehouse} | ${g.length} item? Selisih akan menyesuaikan InventoryBalance.`))return;
+  const btn=document.getElementById('postUploadedOpname');btn.disabled=true;btn.textContent='POSTING...';
+  try{
+    const data={warehouseId:first.warehouseId,opnameDate:first.opnameDate,referenceNo:first.opnameNo,details:g.map(x=>({partId:x.partId,batchNo:x.batchNo,physicalQty:Number(x.physicalQty),uom:x.uom,remarks:x.remarks}))};
+    const r=await apiPost('stockOpname',{...data,username:user().Username||'admin',requestId:makeRequestId()});
+    if(!r.success)throw new Error(r.message||'Stock Opname gagal.');
+    toast(r.message||'Stock Opname berhasil.');
+    await refreshStockOnly();
+    go('stock-opname');
+  }catch(e){toast(e.message||'Stock Opname gagal.',false);btn.disabled=false;btn.textContent='POST STOCK OPNAME';}
+}
+
+
+function reportDateValue_(v){
+  if(!v)return '';
+  const d=new Date(v);
+  return Number.isNaN(d.getTime())?'':d.toISOString().slice(0,10);
+}
+function reportDateInRange_(value,from,to){
+  const d=reportDateValue_(value);
+  if(from&&d<from)return false;
+  if(to&&d>to)return false;
+  return true;
+}
+function reportDownload_(rows,sheetName,fileName){
+  if(!window.XLSX){toast('Library Excel belum tersedia.',false);return;}
+  const ws=XLSX.utils.json_to_sheet(rows||[]);
+  const wb=XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(wb,ws,String(sheetName||'Report').slice(0,31));
+  XLSX.writeFile(wb,fileName||'WMS_Report.xlsx');
+}
+
+async function stockCardPage(){
+  shell('Stock Card','Kartu stock per Part + Warehouse + Batch dengan saldo berjalan dan export Excel.',`
+    <div class="form-card">
+      <div class="form-grid">
+        ${fs('Part Number','scPart',sel('scPart',parts(),'PILIH PART'))}
+        ${fs('Warehouse','scWh',sel('scWh',whs(),'PILIH WAREHOUSE'))}
+        ${f('From Date','scFrom','date')}
+        ${f('To Date','scTo','date')}
+        ${f('Batch No.','scBatch','text','placeholder="Optional · kosongkan untuk semua batch"')}
+      </div>
+      <div class="form-actions" style="justify-content:flex-start;flex-wrap:wrap">
+        <button class="btn primary" id="loadStockCardBtn">Tampilkan Stock Card</button>
+        <button class="btn ghost" id="exportStockCardBtn">Download Excel</button>
+      </div>
+      <div class="muted" style="margin-top:8px;font-size:11px">Pilih Part dan Warehouse. Jika Batch dikosongkan, seluruh batch Part tersebut digabung dalam satu kartu stock.</div>
+    </div>
+    <div id="stockCardKpi" class="kpis" style="margin-top:16px"></div>
+    <div class="table-card" style="margin-top:16px"><div class="table-tools"><b id="stockCardTitle">Stock Card</b><span id="stockCardCount" class="muted">0 movement</span></div><div id="stockCardTable" class="table-scroll"><div class="empty">Pilih Part dan Warehouse lalu klik Tampilkan Stock Card.</div></div></div>`);
+  document.getElementById('loadStockCardBtn').onclick=loadStockCard_;
+  document.getElementById('exportStockCardBtn').onclick=()=>{
+    const data=window._stockCardExport||[];
+    if(!data.length){toast('Belum ada data Stock Card untuk di-download.',false);return;}
+    reportDownload_(data,'Stock Card',`WMS_Stock_Card_${v('scPart')||'PART'}_${v('scWh')||'WH'}_${v('scFrom')||'ALL'}_${v('scTo')||'ALL'}.xlsx`);
+  };
+}
+async function loadStockCard_(){
+  const partId=v('scPart'),warehouseId=v('scWh'),fromDate=v('scFrom'),toDate=v('scTo'),batchNo=String(v('scBatch')||'').trim();
+  if(!partId||!warehouseId){toast('Part Number dan Warehouse wajib dipilih.',false);return;}
+  const box=document.getElementById('stockCardTable');
+  box.innerHTML='<div class="empty">Loading Stock Card...</div>';
+  try{
+    // Gunakan endpoint transactions yang sudah ada agar Stock Card tidak membutuhkan perubahan engine.gs.
+    const r=await apiGet('transactions',{limit:5000});
+    const txs=Array.isArray(r?.data)?r.data:(Array.isArray(r)?r:[]);
+    const part=(CACHE.parts||[]).find(x=>String(x.PartID)===String(partId))||{};
+    const warehouse=(CACHE.warehouses||[]).find(x=>String(x.WarehouseID)===String(warehouseId))||{};
+    const whMap=Object.fromEntries((CACHE.warehouses||[]).map(x=>[String(x.WarehouseID),x.WarehouseCode||x.WarehouseID]));
+    const filtered=txs.filter(x=>{
+      if(String(x.PartID||'')!==String(partId))return false;
+      if(String(x.Status||'').toUpperCase()!=='COMPLETED')return false;
+      if(batchNo && String(x.BatchNo||'').trim()!==batchNo)return false;
+      return true;
+    }).sort((a,b)=>new Date(a.TransactionDate||a.CreatedAt||0)-new Date(b.TransactionDate||b.CreatedAt||0));
+
+    const movementOf=(x)=>{
+      const from=String(x.FromWarehouseID||'');
+      const to=String(x.ToWarehouseID||'');
+      const qty=Math.abs(Number(x.Qty||0));
+      if(to===String(warehouseId) && from!==String(warehouseId))return {inQty:qty,outQty:0};
+      if(from===String(warehouseId) && to!==String(warehouseId))return {inQty:0,outQty:qty};
+      if(to===String(warehouseId) && from===String(warehouseId))return {inQty:0,outQty:0};
+      return null;
+    };
+
+    let opening=0;
+    const rows=[];
+    filtered.forEach(x=>{
+      const mv=movementOf(x); if(!mv)return;
+      const d=reportDateValue_(x.TransactionDate||x.CreatedAt);
+      const inPeriod=reportDateInRange_(x.TransactionDate||x.CreatedAt,fromDate,toDate);
+      if(fromDate && d<fromDate){opening+=mv.inQty-mv.outQty;return;}
+      if(toDate && d>toDate)return;
+      if(inPeriod)rows.push({...x,InQty:mv.inQty,OutQty:mv.outQty});
+    });
+
+    // Backend lama tidak menyediakan endpoint stockCard. Seluruh perhitungan dilakukan
+    // dari Transaction yang sudah ada, sehingga engine.gs tidak perlu diganti.
+    rows.sort((a,b)=>new Date(a.TransactionDate||a.CreatedAt||0)-new Date(b.TransactionDate||b.CreatedAt||0));
+    renderStockCard_({
+      success:true,
+      part:{PartNumber:part.PartNumber||'',PartName:part.PartName||'',UOM:part.UOM||''},
+      warehouse:{WarehouseCode:warehouse.WarehouseCode||warehouseId,WarehouseName:warehouse.WarehouseName||''},
+      batchNo:batchNo,
+      openingQty:opening,
+      closingQty:opening+rows.reduce((a,x)=>a+Number(x.InQty||0)-Number(x.OutQty||0),0),
+      movements:rows
+    });
+  }catch(e){box.innerHTML=`<div class="message err show">${esc(e.message||'Gagal mengambil Stock Card.')}</div>`;window._stockCardExport=[];}
+}
+function renderStockCard_(r){
+  const movements=r.movements||[], opening=Number(r.openingQty||0),closing=Number(r.closingQty||opening);
+  const inQty=movements.reduce((a,x)=>a+Number(x.InQty||0),0),outQty=movements.reduce((a,x)=>a+Number(x.OutQty||0),0);
+  const title=`${r.part?.PartNumber||''} · ${r.part?.PartName||''} · ${r.warehouse?.WarehouseCode||''}${r.batchNo?' · Batch '+r.batchNo:''}`;
+  document.getElementById('stockCardTitle').textContent=title;
+  document.getElementById('stockCardCount').textContent=fmt(movements.length)+' movement';
+  document.getElementById('stockCardKpi').innerHTML=`<div class="kpi"><span>OPENING</span><b>${fmt(opening)}</b><small>${esc(r.part?.UOM||'')}</small></div><div class="kpi"><span>IN</span><b>${fmt(inQty)}</b><small>Stock masuk</small></div><div class="kpi"><span>OUT</span><b>${fmt(outQty)}</b><small>Stock keluar</small></div><div class="kpi"><span>CLOSING</span><b>${fmt(closing)}</b><small>Saldo akhir</small></div>`;
+  let running=opening;
+  const rows=movements.map(x=>{running+=Number(x.InQty||0)-Number(x.OutQty||0);return {...x,RunBalance:running};});
+  const whMap=Object.fromEntries((CACHE.warehouses||[]).map(x=>[String(x.WarehouseID),x.WarehouseCode||x.WarehouseID]));
+  window._stockCardExport=[{Date:'',TransactionNo:'',Type:'OPENING BALANCE',ReferenceNo:'',BatchNo:r.batchNo||'ALL',InQty:'',OutQty:'',Balance:opening,UOM:r.part?.UOM||'',FromWarehouse:'',ToWarehouse:'',Status:'',CreatedBy:'',Remarks:'Opening balance before period'},...rows.map(x=>({Date:reportDateValue_(x.TransactionDate),TransactionNo:x.TransactionNo||'',Type:x.TransactionType||'',ReferenceNo:x.ReferenceNo||'',BatchNo:x.BatchNo||'',InQty:Number(x.InQty||0),OutQty:Number(x.OutQty||0),Balance:Number(x.RunBalance||0),UOM:x.UOM||r.part?.UOM||'',FromWarehouse:whMap[String(x.FromWarehouseID||'')]||x.FromWarehouseID||'',ToWarehouse:whMap[String(x.ToWarehouseID||'')]||x.ToWarehouseID||'',Status:x.Status||'',CreatedBy:x.CreatedBy||'',Remarks:x.Remarks||''}))];
+  if(!rows.length){document.getElementById('stockCardTable').innerHTML='<div class="empty">Tidak ada movement pada periode/filter tersebut.</div>';return;}
+  document.getElementById('stockCardTable').innerHTML=`<table class="data-table"><thead><tr><th>Date</th><th>Transaction</th><th>Type</th><th>Reference</th><th>Batch</th><th>IN</th><th>OUT</th><th>Balance</th><th>UOM</th><th>From</th><th>To</th><th>Status</th></tr></thead><tbody><tr style="font-weight:800"><td>${esc(v('scFrom')||'')}</td><td>—</td><td>OPENING</td><td>—</td><td>${esc(r.batchNo||'ALL')}</td><td>—</td><td>—</td><td>${fmt(opening)}</td><td>${esc(r.part?.UOM||'')}</td><td>—</td><td>—</td><td>—</td></tr>${rows.map(x=>`<tr><td>${esc(reportDateValue_(x.TransactionDate))}</td><td>${esc(x.TransactionNo||'')}</td><td>${esc(x.TransactionType||'')}</td><td>${esc(x.ReferenceNo||'')}</td><td>${esc(x.BatchNo||'')}</td><td>${x.InQty?fmt(x.InQty):'—'}</td><td>${x.OutQty?fmt(x.OutQty):'—'}</td><td><b>${fmt(x.RunBalance)}</b></td><td>${esc(x.UOM||r.part?.UOM||'')}</td><td>${esc(whMap[String(x.FromWarehouseID||'')]||x.FromWarehouseID||'')}</td><td>${esc(whMap[String(x.ToWarehouseID||'')]||x.ToWarehouseID||'')}</td><td>${esc(x.Status||'')}</td></tr>`).join('')}</tbody></table>`;
+}
+
+async function transactionSummaryPage(){
+  shell('Summary Transaction','Ringkasan seluruh transaksi WMS dengan filter dan export Excel.',`
+    <div class="form-card">
+      <div class="form-grid">
+        ${f('From Date','tsFrom','date')}
+        ${f('To Date','tsTo','date')}
+        ${fs('Transaction Type','tsType',sel('tsType',[], 'ALL TYPE'))}
+        ${fs('Status','tsStatus',sel('tsStatus',[], 'ALL STATUS'))}
+        ${fs('Warehouse','tsWh',sel('tsWh',whs(),'ALL WAREHOUSE'))}
+        ${f('Search Transaction / Part / Batch / Reference','tsSearch','text','placeholder="Optional"')}
+      </div>
+      <div class="form-actions" style="justify-content:flex-start;flex-wrap:wrap">
+        <button class="btn primary" id="loadTxSummaryBtn">Tampilkan Summary</button>
+        <button class="btn ghost" id="exportTxSummaryBtn">Download Excel</button>
+      </div>
+    </div>
+    <div id="txSummaryKpi" class="kpis" style="margin-top:16px"></div>
+    <div class="table-card" style="margin-top:16px"><div class="table-tools"><b>Transaction Summary</b><span id="txSummaryCount" class="muted">0 line</span></div><div id="txSummaryTable" class="table-scroll"><div class="empty">Klik Tampilkan Summary.</div></div></div>`);
+  const r=await apiGet('transactions',{limit:5000});
+  if(!r.success){document.getElementById('txSummaryTable').innerHTML=`<div class="message err show">${esc(r.message||'Gagal mengambil transaction.')}</div>`;return;}
+  const rows=r.data||[];
+  const types=[...new Set(rows.map(x=>String(x.TransactionType||'').trim()).filter(Boolean))].sort();
+  const statuses=[...new Set(rows.map(x=>String(x.Status||'').trim()).filter(Boolean))].sort();
+  const typeEl=document.getElementById('tsType'),statusEl=document.getElementById('tsStatus');
+  typeEl.innerHTML='<option value="">ALL TYPE</option>'+types.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join('');
+  statusEl.innerHTML='<option value="">ALL STATUS</option>'+statuses.map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join('');
+  window._transactionSummaryAll=rows;
+  document.getElementById('loadTxSummaryBtn').onclick=()=>renderTransactionSummary_(rows);
+  document.getElementById('tsSearch').oninput=()=>renderTransactionSummary_(rows);
+  ['tsFrom','tsTo','tsType','tsStatus','tsWh'].forEach(id=>document.getElementById(id).onchange=()=>renderTransactionSummary_(rows));
+  document.getElementById('exportTxSummaryBtn').onclick=()=>{
+    const data=window._transactionSummaryExport||[];
+    if(!data.length){toast('Tidak ada transaction sesuai filter.',false);return;}
+    reportDownload_(data,'Transactions',`WMS_Transaction_Summary_${v('tsFrom')||'ALL'}_${v('tsTo')||'ALL'}.xlsx`);
+  };
+  renderTransactionSummary_(rows);
+}
+function renderTransactionSummary_(rows){
+  const from=v('tsFrom'),to=v('tsTo'),type=v('tsType'),status=v('tsStatus'),wh=v('tsWh'),q=String(v('tsSearch')||'').toLowerCase();
+  const whMap=Object.fromEntries((CACHE.warehouses||[]).map(x=>[String(x.WarehouseID),x]));
+  const pm=Object.fromEntries((CACHE.parts||[]).map(x=>[String(x.PartID),x]));
+  const data=(rows||[]).map(x=>{const p=pm[String(x.PartID||'')]||{};const fw=whMap[String(x.FromWarehouseID||'')]||{};const tw=whMap[String(x.ToWarehouseID||'')]||{};return {...x,Date:reportDateValue_(x.TransactionDate),PartNumber:p.PartNumber||x.PartID||'',PartName:p.PartName||'',FromWarehouse:fw.WarehouseCode||x.FromWarehouseID||'',ToWarehouse:tw.WarehouseCode||x.ToWarehouseID||''};})
+    .filter(x=>reportDateInRange_(x.Date,from,to)&&(!type||String(x.TransactionType||'')===type)&&(!status||String(x.Status||'')===status)&&(!wh||String(x.FromWarehouseID||'')===wh||String(x.ToWarehouseID||'')===wh)&&(!q||[x.TransactionNo,x.TransactionType,x.PartNumber,x.PartName,x.BatchNo,x.ReferenceNo,x.CreatedBy,x.FromWarehouse,x.ToWarehouse].some(z=>String(z||'').toLowerCase().includes(q))));
+  window._transactionSummaryExport=data.map(x=>({TransactionNo:x.TransactionNo||'',Date:x.Date,Type:x.TransactionType||'',PartNumber:x.PartNumber,PartName:x.PartName,Qty:Number(x.Qty||0),UOM:x.UOM||'',BatchNo:x.BatchNo||'',FromWarehouse:x.FromWarehouse,ToWarehouse:x.ToWarehouse,ReferenceNo:x.ReferenceNo||'',Status:x.Status||'',CreatedBy:x.CreatedBy||'',Remarks:x.Remarks||''}));
+  const qty=data.reduce((a,x)=>a+Number(x.Qty||0),0),types=new Set(data.map(x=>x.TransactionType).filter(Boolean)).size,parts=new Set(data.map(x=>x.PartNumber).filter(Boolean)).size;
+  document.getElementById('txSummaryKpi').innerHTML=`<div class="kpi"><span>TRANSACTIONS</span><b>${fmt(data.length)}</b><small>Filtered lines</small></div><div class="kpi"><span>QTY</span><b>${fmt(qty)}</b><small>Total transaction qty</small></div><div class="kpi"><span>TYPES</span><b>${fmt(types)}</b><small>Transaction types</small></div><div class="kpi"><span>PARTS</span><b>${fmt(parts)}</b><small>Unique parts</small></div>`;
+  document.getElementById('txSummaryCount').textContent=`${fmt(data.length)} line`;
+  document.getElementById('txSummaryTable').innerHTML=data.length?table(['Transaction No','Date','Type','Part Number','Part Name','Qty','UOM','Batch','From','To','Reference','Status','Created By'],data.map(x=>[x.TransactionNo,x.Date,x.TransactionType,x.PartNumber,x.PartName,x.Qty,x.UOM,x.BatchNo,x.FromWarehouse,x.ToWarehouse,x.ReferenceNo,x.Status,x.CreatedBy])):'<div class="empty">Tidak ada transaction sesuai filter.</div>';
+}
+
+async function transactionRevisionPage(){
+  if(!isAdmin()){toast('Revisi Transaction hanya untuk ADMIN.',false);return;}
+  shell('Revisi Transaction','ADMIN only · lakukan reversal transaction jika terjadi kesalahan input. Stock akan dikembalikan otomatis oleh backend.',`
+    <div class="module-info"><b>PERINGATAN</b><p>Revisi di sini adalah <b>reversal</b>, bukan mengubah histori transaksi secara langsung. Transaction asli tetap tersimpan dan status menjadi <b>REVERSED</b>. Gunakan dengan hati-hati, terutama untuk transaksi yang merupakan bagian dari proses produksi.</p></div>
+    <div class="form-card"><div class="form-grid">${f('Search Transaction / Part / Batch','trSearch','text','placeholder="Cari nomor transaksi, part, batch, reference"')}</div><div class="form-actions" style="justify-content:flex-start"><button class="btn primary" id="loadRevisionBtn">Refresh Transaction</button></div></div>
+    <div class="table-card" style="margin-top:16px"><div class="table-tools"><b>Transaction yang dapat direvisi</b><span id="revisionCount" class="muted">0 line</span></div><div id="revisionTable" class="table-scroll"><div class="loading">Loading...</div></div></div>`);
+  document.getElementById('loadRevisionBtn').onclick=loadTransactionRevision_;
+  document.getElementById('trSearch').oninput=()=>renderTransactionRevision_(window._revisionRows||[]);
+  await loadTransactionRevision_();
+}
+async function loadTransactionRevision_(){
+  const box=document.getElementById('revisionTable');if(!box)return;box.innerHTML='<div class="loading">Loading transaction...</div>';
+  try{const r=await apiGet('transactions',{limit:5000});if(!r.success)throw Error(r.message||'Gagal mengambil transaction.');window._revisionRows=(r.data||[]).filter(x=>String(x.Status||'').toUpperCase()==='COMPLETED');renderTransactionRevision_(window._revisionRows);}catch(e){box.innerHTML=`<div class="message err show">${esc(e.message)}</div>`;}
+}
+function renderTransactionRevision_(rows){
+  const q=String(v('trSearch')||'').toLowerCase();const pm=Object.fromEntries((CACHE.parts||[]).map(x=>[String(x.PartID),x]));const wm=Object.fromEntries((CACHE.warehouses||[]).map(x=>[String(x.WarehouseID),x]));
+  const data=(rows||[]).filter(x=>!q||[x.TransactionNo,x.TransactionType,x.BatchNo,x.ReferenceNo,x.PartID,pm[String(x.PartID)]?.PartNumber].some(z=>String(z||'').toLowerCase().includes(q)));
+  document.getElementById('revisionCount').textContent=`${fmt(data.length)} transaction`;
+  if(!data.length){document.getElementById('revisionTable').innerHTML='<div class="empty">Tidak ada transaction COMPLETED yang sesuai.</div>';return;}
+  document.getElementById('revisionTable').innerHTML=`<div class="scroll"><table><thead><tr>${['Transaction No','Date','Type','Part','Qty','Batch','From','To','Reference','User','Action'].map(x=>`<th>${x}</th>`).join('')}</tr></thead><tbody>${data.map(x=>`<tr><td>${esc(x.TransactionNo||'')}</td><td>${esc(reportDateValue_(x.TransactionDate))}</td><td>${esc(x.TransactionType||'')}</td><td>${esc(pm[String(x.PartID)]?.PartNumber||x.PartID||'')}</td><td>${esc(x.Qty||0)} ${esc(x.UOM||'')}</td><td>${esc(x.BatchNo||'')}</td><td>${esc(wm[String(x.FromWarehouseID)]?.WarehouseCode||x.FromWarehouseID||'')}</td><td>${esc(wm[String(x.ToWarehouseID)]?.WarehouseCode||x.ToWarehouseID||'')}</td><td>${esc(x.ReferenceNo||'')}</td><td>${esc(x.CreatedBy||'')}</td><td><button class="btn danger" onclick="reverseTransaction_('${esc(String(x.TransactionID||''))}','${esc(String(x.TransactionNo||''))}')">REVISE / REVERSE</button></td></tr>`).join('')}</tbody></table></div>`;
+}
+async function reverseTransaction_(transactionId,transactionNo){
+  if(!transactionId){toast('TransactionID tidak ditemukan.',false);return;}
+  if(!confirm(`Reversal transaction ${transactionNo}?\\n\\nStock akan dibalik oleh backend dan transaction menjadi REVERSED. Proses ini tidak dapat di-undo otomatis.`))return;
+  try{const r=await apiPost('deleteTransaction',{transactionId,username:user().Username||'admin',requestId:makeRequestId()});if(!r.success)throw Error(r.message||'Reversal gagal.');toast(`Transaction ${transactionNo} berhasil direvisi/reversal.`);await refreshStockOnly();await loadTransactionRevision_();}catch(e){toast(e.message||'Reversal gagal.',false);}
+}
+
+async function stockOpnameReportPage(){
+  shell('Report Stock Opname','Laporan hasil stock opname: System Qty vs Physical Qty dan selisih.',`
+    <div class="form-card">
+      <div class="form-grid">
+        ${f('From Date','orFrom','date')}
+        ${f('To Date','orTo','date')}
+        ${fs('Warehouse','orWh',sel('orWh',whs(),'ALL WAREHOUSE'))}
+        ${f('Search Opname / Part / Batch','orSearch','text','placeholder="Optional"')}
+      </div>
+      <div class="form-actions" style="justify-content:flex-start;flex-wrap:wrap">
+        <button class="btn primary" id="loadOpnameReportBtn">Tampilkan Report</button>
+        <button class="btn ghost" id="exportOpnameReportBtn">Export Excel</button>
+      </div>
+    </div>
+    <div id="opnameReportKpi" class="kpis" style="margin-top:16px"></div>
+    <div class="table-card" style="margin-top:16px"><div class="table-tools"><b>Detail Stock Opname</b><span id="opnameReportCount" class="muted">0 line</span></div><div id="opnameReportTable" class="table-scroll"><div class="empty">Klik Tampilkan Report.</div></div></div>`);
+
+  const btn=document.getElementById('loadOpnameReportBtn');
+  const exportBtn=document.getElementById('exportOpnameReportBtn');
+  btn.onclick=loadStockOpnameReport_;
+  exportBtn.onclick=()=>{
+    const rows=window._stockOpnameReportExport||[];
+    if(!rows.length){toast('Belum ada data report untuk diexport.',false);return;}
+    const from=v('orFrom')||'ALL',to=v('orTo')||'ALL';
+    reportDownload_(rows,'StockOpname',`WMS_Stock_Opname_Report_${from}_${to}.xlsx`);
+  };
+  document.getElementById('orSearch').oninput=()=>renderStockOpnameReport_(window._stockOpnameReportAll||[]);
+  await loadStockOpnameReport_();
+}
+
+async function loadStockOpnameReport_(){
+  const box=document.getElementById('opnameReportTable');
+  if(!box)return;
+  box.innerHTML='<div class="loading">Loading Stock Opname report...</div>';
+  try{
+    const [hRes,dRes]=await Promise.all([apiGet('stockOpname'),apiGet('stockOpnameDetails')]);
+    if(!hRes.success)throw new Error(hRes.message||'Data Stock Opname gagal dimuat.');
+    if(!dRes.success)throw new Error(dRes.message||'Detail Stock Opname gagal dimuat.');
+    const headers=hRes.data||[],details=dRes.data||[];
+    const partMap=Object.fromEntries((CACHE.parts||[]).map(x=>[String(x.PartID),x]));
+    const whMap=Object.fromEntries((CACHE.warehouses||[]).map(x=>[String(x.WarehouseID),x]));
+    const headMap=Object.fromEntries(headers.map(x=>[String(x.OpnameID||''),x]));
+    const from=v('orFrom'),to=v('orTo'),wh=v('orWh'),q=String(v('orSearch')||'').toLowerCase();
+    const rows=details.map(d=>{
+      const h=headMap[String(d.OpnameID||'')]||{};
+      const p=partMap[String(d.PartID)]||{};
+      const w=whMap[String(h.WarehouseID||'')]||{};
+      const system=Number(d.SystemQty||0),physical=Number(d.PhysicalQty||0),diff=Number(d.DifferenceQty||0);
+      return {OpnameNo:h.OpnameNo||'',OpnameDate:reportDateValue_(h.OpnameDate),Warehouse:w.WarehouseCode||h.WarehouseID||'',WarehouseName:w.WarehouseName||'',PartNumber:p.PartNumber||d.PartID||'',PartName:p.PartName||'',BatchNo:d.BatchNo||'',SystemQty:system,PhysicalQty:physical,DifferenceQty:diff,UOM:d.UOM||p.UOM||'PCS',Status:h.Status||'',CreatedBy:h.CreatedBy||'',Remarks:d.Remarks||''};
+    }).filter(x=>reportDateInRange_(x.OpnameDate,from,to) && (!wh||x.Warehouse===wh) && (!q||[x.OpnameNo,x.PartNumber,x.PartName,x.BatchNo,x.Warehouse].some(z=>String(z||'').toLowerCase().includes(q))));
+    window._stockOpnameReportAll=rows;
+    renderStockOpnameReport_(rows);
+  }catch(e){
+    box.innerHTML=`<div class="message err show">${esc(e.message||'Gagal memuat report Stock Opname.')}</div>`;
+  }
+}
+
+function renderStockOpnameReport_(rows){
+  const data=rows||[];
+  const totalSystem=data.reduce((a,x)=>a+Number(x.SystemQty||0),0);
+  const totalPhysical=data.reduce((a,x)=>a+Number(x.PhysicalQty||0),0);
+  const totalDiff=data.reduce((a,x)=>a+Number(x.DifferenceQty||0),0);
+  const diffLines=data.filter(x=>Number(x.DifferenceQty||0)!==0).length;
+  const opnameSet=new Set(data.map(x=>x.OpnameNo).filter(Boolean));
+  const matched=data.filter(x=>Number(x.DifferenceQty||0)===0).length;
+  const k=document.getElementById('opnameReportKpi');
+  if(k)k.innerHTML=`<div class="kpi"><span>OPNAME</span><b>${fmt(opnameSet.size)}</b><small>Document</small></div><div class="kpi"><span>LINES</span><b>${fmt(data.length)}</b><small>Detail lines</small></div><div class="kpi"><span>MATCH</span><b>${fmt(matched)}</b><small>System = Physical</small></div><div class="kpi"><span>DIFFERENCE</span><b>${fmt(diffLines)}</b><small>Lines with variance</small></div><div class="kpi"><span>SYSTEM QTY</span><b>${fmt(totalSystem)}</b><small>Total system</small></div><div class="kpi"><span>PHYSICAL QTY</span><b>${fmt(totalPhysical)}</b><small>Total physical</small></div><div class="kpi"><span>NET DIFFERENCE</span><b>${fmt(totalDiff)}</b><small>Physical - System</small></div>`;
+  const count=document.getElementById('opnameReportCount');if(count)count.textContent=`${fmt(data.length)} line`;
+  const box=document.getElementById('opnameReportTable');if(!box)return;
+  if(!data.length){box.innerHTML='<div class="empty">Tidak ada data Stock Opname sesuai filter.</div>';window._stockOpnameReportExport=[];return;}
+  window._stockOpnameReportExport=data;
+  box.innerHTML=table(['Opname No','Date','Warehouse','Part Number','Part Name','Batch','System Qty','Physical Qty','Difference','UOM','Status','Created By','Remarks'],data.map(x=>[x.OpnameNo,x.OpnameDate,x.Warehouse,x.PartNumber,x.PartName,x.BatchNo,x.SystemQty,x.PhysicalQty,x.DifferenceQty,x.UOM,x.Status,x.CreatedBy,x.Remarks]));
+}
+
+async function deliverySummaryPage(){
+  shell('Summary Delivery','Ringkasan FG Delivery berdasarkan periode, customer, part, batch, dan quantity.',`
+    <div class="form-card">
+      <div class="form-grid">
+        ${f('From Date','drFrom','date')}
+        ${f('To Date','drTo','date')}
+        ${fs('Customer','drCustomer',sel('drCustomer',custs(),'ALL CUSTOMER'))}
+        ${f('Search Delivery / Part / Batch','drSearch','text','placeholder="Optional"')}
+      </div>
+      <div class="form-actions" style="justify-content:flex-start;flex-wrap:wrap">
+        <button class="btn primary" id="loadDeliverySummaryBtn">Tampilkan Summary</button>
+        <button class="btn ghost" id="exportDeliverySummaryBtn">Export Excel</button>
+      </div>
+    </div>
+    <div id="deliverySummaryKpi" class="kpis" style="margin-top:16px"></div>
+    <div class="table-card" style="margin-top:16px"><div class="table-tools"><b>Delivery Detail Summary</b><span id="deliverySummaryCount" class="muted">0 line</span></div><div id="deliverySummaryTable" class="table-scroll"><div class="empty">Klik Tampilkan Summary.</div></div></div>`);
+  document.getElementById('loadDeliverySummaryBtn').onclick=loadDeliverySummary_;
+  document.getElementById('exportDeliverySummaryBtn').onclick=()=>{
+    const rows=window._deliverySummaryExport||[];
+    if(!rows.length){toast('Belum ada data delivery untuk diexport.',false);return;}
+    const from=v('drFrom')||'ALL',to=v('drTo')||'ALL';
+    reportDownload_(rows,'DeliverySummary',`WMS_Delivery_Summary_${from}_${to}.xlsx`);
+  };
+  document.getElementById('drSearch').oninput=()=>renderDeliverySummary_(window._deliverySummaryAll||[]);
+  await loadDeliverySummary_();
+}
+
+async function loadDeliverySummary_(){
+  const box=document.getElementById('deliverySummaryTable');if(!box)return;
+  box.innerHTML='<div class="loading">Loading Delivery summary...</div>';
+  try{
+    const [hRes,dRes]=await Promise.all([apiGet('deliveries'),apiGet('deliveryDetails')]);
+    if(!hRes.success)throw new Error(hRes.message||'Data Delivery gagal dimuat.');
+    if(!dRes.success)throw new Error(dRes.message||'Detail Delivery gagal dimuat.');
+    const headers=hRes.data||[],details=dRes.data||[];
+    const partMap=Object.fromEntries((CACHE.parts||[]).map(x=>[String(x.PartID),x]));
+    const custMap=Object.fromEntries((CACHE.customers||[]).map(x=>[String(x.CustomerID),x]));
+    const headMap=Object.fromEntries(headers.map(x=>[String(x.DeliveryID||''),x]));
+    const from=v('drFrom'),to=v('drTo'),customer=v('drCustomer'),q=String(v('drSearch')||'').toLowerCase();
+    const rows=details.map(d=>{
+      const h=headMap[String(d.DeliveryID||'')]||{};
+      const p=partMap[String(d.PartID)]||{};
+      const c=custMap[String(h.CustomerID||'')]||{};
+      return {DeliveryNo:h.DeliveryNo||'',DeliveryDate:reportDateValue_(h.DeliveryDate),Customer:c.CustomerName||c.CustomerCode||h.CustomerID||'',CustomerID:h.CustomerID||'',PartNumber:p.PartNumber||d.PartID||'',PartName:p.PartName||'',BatchNo:d.BatchNo||'',Qty:Number(d.Qty||0),UOM:d.UOM||p.UOM||'PCS',VehicleNo:h.VehicleNo||'',DriverName:h.DriverName||'',Status:h.Status||'',ReferenceNo:h.ReferenceNo||h.PONo||'',CreatedBy:h.CreatedBy||'',Remarks:h.Remarks||''};
+    }).filter(x=>reportDateInRange_(x.DeliveryDate,from,to) && (!customer||x.CustomerID===customer) && (!q||[x.DeliveryNo,x.Customer,x.PartNumber,x.PartName,x.BatchNo,x.VehicleNo,x.ReferenceNo].some(z=>String(z||'').toLowerCase().includes(q))));
+    window._deliverySummaryAll=rows;
+    renderDeliverySummary_(rows);
+  }catch(e){box.innerHTML=`<div class="message err show">${esc(e.message||'Gagal memuat Summary Delivery.')}</div>`;}
+}
+
+function renderDeliverySummary_(rows){
+  const data=rows||[];
+  const deliveries=new Set(data.map(x=>x.DeliveryNo).filter(Boolean));
+  const customers=new Set(data.map(x=>x.Customer).filter(Boolean));
+  const parts=new Set(data.map(x=>x.PartNumber).filter(Boolean));
+  const qty=data.reduce((a,x)=>a+Number(x.Qty||0),0);
+  const k=document.getElementById('deliverySummaryKpi');
+  if(k)k.innerHTML=`<div class="kpi"><span>DELIVERY ORDER</span><b>${fmt(deliveries.size)}</b><small>Delivery documents</small></div><div class="kpi"><span>DELIVERY LINES</span><b>${fmt(data.length)}</b><small>Detail lines</small></div><div class="kpi"><span>TOTAL QTY</span><b>${fmt(qty)}</b><small>Delivered quantity</small></div><div class="kpi"><span>CUSTOMER</span><b>${fmt(customers.size)}</b><small>Customer</small></div><div class="kpi"><span>PART</span><b>${fmt(parts.size)}</b><small>Finished goods</small></div>`;
+  const count=document.getElementById('deliverySummaryCount');if(count)count.textContent=`${fmt(data.length)} line`;
+  const box=document.getElementById('deliverySummaryTable');if(!box)return;
+  if(!data.length){box.innerHTML='<div class="empty">Tidak ada delivery sesuai filter.</div>';window._deliverySummaryExport=[];return;}
+  window._deliverySummaryExport=data;
+  box.innerHTML=table(['Delivery No','Date','Customer','Part Number','Part Name','Batch','Qty','UOM','Vehicle','Driver','Status','Reference / PO','Created By','Remarks'],data.map(x=>[x.DeliveryNo,x.DeliveryDate,x.Customer,x.PartNumber,x.PartName,x.BatchNo,x.Qty,x.UOM,x.VehicleNo,x.DriverName,x.Status,x.ReferenceNo,x.CreatedBy,x.Remarks]));
+}
+
+function masterPartPage(){shell('Master Part','Create PartID / Part Number master',`<div class="panel quick-import"><div><b>Master Part Import</b><p class="muted">Upload banyak Master Part dari Excel tanpa input satu per satu.</p></div><div class="form-actions"><button class="btn ghost" onclick="openImport('master')">↑ Upload Excel</button><button class="btn ghost" onclick="go('import-center');setTimeout(()=>document.getElementById('downloadTemplateBtn')?.click(),0)">↓ Template</button></div></div>`+formCard([f('Part Number','mpNo'),f('Part Name','mpName'),f('Part Type','mpType','text','value="MATERIAL"'),f('Category','mpCat'),f('UOM','mpUom','text','value="PCS"'),f('Min Stock','mpMin','number','min="0"'),f('Max Stock','mpMax','number','min="0"')],'Save Master Part'));document.getElementById('saveBtn').onclick=()=>submit('saveMaster',{table:'parts',partNumber:v('mpNo'),partName:v('mpName'),partType:v('mpType'),category:v('mpCat'),uom:v('mpUom'),minStock:Number(v('mpMin')),maxStock:Number(v('mpMax'))},'Master Part')}
 function warehousePage(){shell('Warehouse','Create warehouse / location',formCard([f('Warehouse Code','whCode'),f('Warehouse Name','whName'),f('Warehouse Type','whType','text','value="STORAGE"'),fs('Parent Warehouse','whParent',sel('whParent',whs(),'None')),f('Status','whStatus','text','value="ACTIVE"')],'Save Warehouse'));document.getElementById('saveBtn').onclick=()=>submit('saveMaster',{table:'warehouses',warehouseCode:v('whCode'),warehouseName:v('whName'),warehouseType:v('whType'),parentWarehouseId:v('whParent'),status:v('whStatus')},'Warehouse')}
 function customerPage(){shell('Customer','Customer master data',formCard([f('Customer Code','cusCode'),f('Customer Name','cusName'),f('Contact','cusContact'),f('Address','cusAddress')],'Save Customer'));document.getElementById('saveBtn').onclick=()=>submit('saveMaster',{table:'customers',customerCode:v('cusCode'),customerName:v('cusName'),contact:v('cusContact'),address:v('cusAddress')},'Customer')}
 function bomPage(){shell('BOM','Bill of Material · Parent → Components',`<div class="panel quick-import"><div><b>BOM Import</b><p class="muted">Upload BOM Header + BOM Detail dari Excel. Parent dan Component Part akan dicari otomatis dari Master Part.</p></div><div class="form-actions"><button class="btn ghost" onclick="openImport('bom')">↑ Upload BOM Excel</button><button class="btn ghost" onclick="go('import-center');setTimeout(()=>{document.querySelector('.import-tab[data-type=\"bom\"]')?.click();document.getElementById('downloadTemplateBtn')?.click()},0)">↓ Template BOM</button></div></div><div class="form-card"><div class="form-grid">${fs('Parent Part','bomParent',sel('bomParent',parts()))}${f('BOM Version','bomVer','text','value="V1"')}${f('Effective Date','bomDate','date','value="'+new Date().toISOString().slice(0,10)+'"')}</div><h4 class="section-title">Components</h4><div id="bomItems"></div><button class="btn ghost" onclick="addBomItem()">+ Add Component</button><div class="form-actions"><button class="btn primary" id="saveBom">Save BOM</button></div></div>`);addBomItem();document.getElementById('saveBom').onclick=saveBom}
@@ -1080,7 +1601,7 @@ async function submit(action,data,label,buttonId=null){
 function v(id){return document.getElementById(id)?.value?.trim()||''}
 async function refreshStockOnly(){try{const r=await apiGet('stock');if(r.success)CACHE.stock=r.data||[]}catch(e){}}
 async function refreshAll(){await loadCache();go(document.querySelector('.nav-item.active')?.dataset.page||'dashboard')}
-document.getElementById('logoutBtn').onclick=async()=>{await exitScanFullscreen();logoutUser();};document.getElementById('refreshBtn').onclick=refreshAll;document.getElementById('mobileMenu').onclick=()=>document.querySelector('.sidebar').classList.toggle('open');
+document.getElementById('logoutBtn').onclick=()=>{logoutUser();};document.getElementById('refreshBtn').onclick=refreshAll;document.getElementById('mobileMenu').onclick=()=>document.querySelector('.sidebar').classList.toggle('open');
 async function handleLogin(event){
   event.preventDefault();
   const msg=document.getElementById('loginMessage');

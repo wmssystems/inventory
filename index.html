@@ -133,6 +133,667 @@ body.scan-active{overflow:hidden!important}
 .inline-camera-fullscreen .qr-reader__dashboard{display:none!important}
 .inline-camera-fullscreen:after{content:"";position:absolute;left:50%;top:50%;width:min(82vw,420px);height:min(48vw,260px);transform:translate(-50%,-50%);border:2px solid rgba(255,255,255,.9);border-radius:16px;box-shadow:0 0 0 9999px rgba(0,0,0,.18);pointer-events:none;z-index:5}
 @media(max-width:700px){.inline-camera-fullscreen:after{width:84vw;height:52vw}}
+
+/* =========================================================
+   WMS OPERATOR SIMPLE MODE
+   Visual/UX only - fungsi, API, database dan transaction flow tetap.
+   ========================================================= */
+.operator-mode .sidebar{
+  width:235px;
+  padding:12px 10px;
+}
+.operator-mode .main{
+  margin-left:235px;
+  width:calc(100% - 235px);
+}
+.operator-mode .sidebar-head{
+  padding:6px 8px 12px;
+  margin-bottom:6px;
+}
+.operator-mode .sidebar-head b{font-size:14px}
+.operator-mode .sidebar-head small{display:none}
+.operator-mode .nav-sec{
+  padding:9px 8px 4px;
+  font-size:9px;
+}
+.operator-mode .nav-item{
+  padding:12px 10px;
+  margin:2px 0;
+  border-radius:8px;
+  font-size:13px;
+}
+.operator-mode .nav-item i{font-size:15px}
+.operator-mode .topbar{
+  height:62px;
+  padding:0 16px;
+}
+.operator-mode .topbar h2{font-size:17px}
+.operator-mode #pageSub{display:none}
+.operator-mode .content{padding:14px 16px}
+.operator-mode .page-head{margin-bottom:12px}
+.operator-mode .page-head h3{font-size:20px}
+.operator-mode .page-head p{display:none}
+
+/* Transaction screens: remove non-essential explanatory UI */
+.operator-mode .tx-card-head p,
+.operator-mode .tx-step,
+.operator-mode .tx-card-head .role-badge{
+  display:none;
+}
+.operator-mode .tx-card-head{
+  padding:13px 15px;
+}
+.operator-mode .tx-card-head h4{
+  margin:0;
+  font-size:15px;
+}
+.operator-mode .tx-card-body{
+  padding:14px 15px;
+}
+.operator-mode .tx-page{
+  grid-template-columns:1fr;
+}
+.operator-mode .tx-side{
+  display:none;
+}
+.operator-mode .tx-card{
+  border-radius:11px;
+  margin-bottom:10px;
+  box-shadow:none;
+}
+.operator-mode .tx-actions{
+  padding:12px 15px;
+}
+.operator-mode .tx-actions .btn.primary{
+  min-height:46px;
+  font-size:14px;
+  font-weight:700;
+}
+.operator-mode .field span{
+  font-size:11px;
+  font-weight:600;
+}
+.operator-mode .field input,
+.operator-mode .field select{
+  min-height:44px;
+  font-size:14px;
+}
+.operator-mode .form-grid{
+  gap:10px;
+}
+.operator-mode .inline-scanner{
+  padding:10px;
+  border-radius:9px;
+}
+.operator-mode .inline-scanner-head small{
+  display:none;
+}
+.operator-mode .inline-scan-status{
+  padding:5px 0;
+}
+.operator-mode .manual-inline{
+  margin-top:6px;
+}
+
+/* Production / Testing / delivery cards */
+.operator-mode .process-cards{
+  gap:10px;
+}
+.operator-mode .process{
+  border-radius:11px;
+  box-shadow:none;
+}
+.operator-mode .process>p{
+  display:none;
+}
+.operator-mode .process>h4{
+  padding:13px 15px;
+}
+.operator-mode .process .form-grid{
+  padding:0 15px;
+}
+.operator-mode .process .form-actions{
+  padding:10px 15px;
+}
+
+/* Tables remain fully functional, but become denser on operator screen. */
+.operator-mode .panel,
+.operator-mode .form-card,
+.operator-mode .table-card{
+  padding:14px;
+  border-radius:11px;
+  box-shadow:none;
+}
+.operator-mode .data-table th,
+.operator-mode .data-table td{
+  padding:8px;
+}
+
+/* Larger touch targets on phone */
+@media(max-width:900px){
+  .operator-mode .sidebar{
+    width:280px;
+  }
+  .operator-mode .main{
+    margin-left:0;
+    width:100%;
+  }
+  .operator-mode .content{
+    padding:10px;
+  }
+  .operator-mode .topbar{
+    padding:0 10px;
+  }
+  .operator-mode .top-right{
+    gap:6px;
+  }
+  .operator-mode #userInfo{
+    display:none;
+  }
+  .operator-mode .page-head h3{
+    font-size:19px;
+  }
+  .operator-mode .form-grid{
+    grid-template-columns:1fr;
+  }
+  .operator-mode .form-actions,
+  .operator-mode .tx-actions{
+    flex-direction:column;
+  }
+  .operator-mode .form-actions .btn,
+  .operator-mode .tx-actions .btn{
+    width:100%;
+    min-height:44px;
+  }
+  .operator-mode .kpis{
+    grid-template-columns:repeat(2,1fr);
+  }
+}
+
+/* Very small phone */
+@media(max-width:430px){
+  .operator-mode .kpis{
+    grid-template-columns:1fr 1fr;
+    gap:7px;
+  }
+  .operator-mode .kpi{
+    padding:10px;
+    min-height:auto;
+  }
+  .operator-mode .kpi b{
+    font-size:20px;
+  }
+}
+
+
+/* =========================================================
+   WMS NEAT OPERATOR UI
+   Polished visual layer only. Existing functions remain.
+   ========================================================= */
+:root{
+  --op-radius:14px;
+  --op-radius-sm:10px;
+  --op-gap:12px;
+  --op-shadow:0 3px 14px rgba(15,23,42,.07);
+}
+
+/* Clean overall shell */
+.operator-mode{
+  background:#f5f7fb;
+}
+.operator-mode .sidebar{
+  background:#fff;
+  border-right:1px solid #e8edf3;
+  box-shadow:2px 0 12px rgba(15,23,42,.04);
+}
+.operator-mode .main{
+  background:#f5f7fb;
+}
+.operator-mode .topbar{
+  background:rgba(255,255,255,.96);
+  border-bottom:1px solid #e8edf3;
+  box-shadow:0 2px 10px rgba(15,23,42,.04);
+}
+.operator-mode .content{
+  max-width:1500px;
+}
+
+/* Sidebar */
+.operator-mode .sidebar-head{
+  border-bottom:1px solid #edf0f4;
+}
+.operator-mode .nav-sec{
+  color:#8a94a6;
+  letter-spacing:.08em;
+}
+.operator-mode .nav-item{
+  color:#526071;
+  border:1px solid transparent;
+  transition:.18s ease;
+}
+.operator-mode .nav-item:hover{
+  background:#f4f7fb;
+  color:#172033;
+}
+.operator-mode .nav-item.active{
+  background:#eef5ff;
+  color:#1769d2;
+  border-color:#d8e8ff;
+  font-weight:700;
+}
+
+/* Page header */
+.operator-mode .page-head{
+  display:flex;
+  align-items:flex-end;
+  justify-content:space-between;
+  gap:12px;
+  padding:4px 2px 12px;
+  border-bottom:1px solid #e8edf3;
+}
+.operator-mode .page-head h3{
+  margin:0;
+  font-size:22px;
+  font-weight:750;
+  letter-spacing:-.02em;
+}
+.operator-mode .page-head p{
+  margin:4px 0 0;
+  color:#8a94a6;
+}
+
+/* Cards */
+.operator-mode .panel,
+.operator-mode .form-card,
+.operator-mode .table-card,
+.operator-mode .tx-card,
+.operator-mode .process{
+  background:#fff;
+  border:1px solid #e8edf3;
+  border-radius:var(--op-radius);
+  box-shadow:var(--op-shadow);
+}
+.operator-mode .panel-head{
+  border-bottom:1px solid #edf0f4;
+  padding-bottom:10px;
+  margin-bottom:12px;
+}
+.operator-mode .tx-card{
+  overflow:hidden;
+}
+.operator-mode .tx-card-head{
+  background:#fafbfd;
+  border-bottom:1px solid #edf0f4;
+}
+.operator-mode .tx-card-body{
+  background:#fff;
+}
+
+/* Form */
+.operator-mode .field{
+  gap:6px;
+}
+.operator-mode .field span{
+  color:#667085;
+  font-size:11px;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+}
+.operator-mode .field input,
+.operator-mode .field select,
+.operator-mode input,
+.operator-mode select{
+  border:1px solid #dce3ec;
+  border-radius:9px;
+  background:#fff;
+  color:#172033;
+  outline:none;
+  transition:border-color .15s,box-shadow .15s;
+}
+.operator-mode .field input:focus,
+.operator-mode .field select:focus,
+.operator-mode input:focus,
+.operator-mode select:focus{
+  border-color:#76aef4;
+  box-shadow:0 0 0 3px rgba(37,119,220,.10);
+}
+
+/* Primary action */
+.operator-mode .btn.primary{
+  border-radius:9px;
+  min-height:44px;
+  font-weight:750;
+  box-shadow:0 2px 6px rgba(23,105,210,.16);
+}
+.operator-mode .btn.ghost{
+  border-radius:9px;
+}
+
+/* Scanner gets visual priority */
+.operator-mode .inline-scanner,
+.operator-mode .scan-panel{
+  border-radius:var(--op-radius);
+}
+.operator-mode .scan-actions{
+  gap:8px;
+}
+.operator-mode .scan-actions .btn{
+  min-height:42px;
+}
+
+/* Tables */
+.operator-mode .table-scroll{
+  border:1px solid #edf0f4;
+  border-radius:10px;
+}
+.operator-mode .data-table thead th{
+  background:#f7f9fc;
+  color:#667085;
+  font-size:10px;
+  text-transform:uppercase;
+  letter-spacing:.04em;
+  white-space:nowrap;
+}
+.operator-mode .data-table tbody tr:hover{
+  background:#f8fbff;
+}
+
+/* KPI cards */
+.operator-mode .kpi{
+  border:1px solid #e8edf3;
+  border-radius:12px;
+  box-shadow:var(--op-shadow);
+  background:#fff;
+}
+
+/* Production cards */
+.operator-mode .process{
+  overflow:hidden;
+}
+.operator-mode .process>h4{
+  background:#fafbfd;
+  border-bottom:1px solid #edf0f4;
+  margin:0;
+}
+
+/* Empty/loading/error states */
+.operator-mode .empty{
+  color:#98a2b3;
+  padding:24px;
+  text-align:center;
+}
+.operator-mode .error{
+  border-radius:10px;
+}
+
+/* Mobile-first polish */
+@media(max-width:700px){
+  .operator-mode .content{
+    padding:10px;
+  }
+  .operator-mode .page-head{
+    padding:2px 1px 10px;
+  }
+  .operator-mode .page-head h3{
+    font-size:19px;
+  }
+  .operator-mode .panel,
+  .operator-mode .form-card,
+  .operator-mode .table-card,
+  .operator-mode .tx-card,
+  .operator-mode .process{
+    border-radius:12px;
+  }
+  .operator-mode .field input,
+  .operator-mode .field select{
+    min-height:46px;
+  }
+  .operator-mode .tx-actions{
+    gap:8px;
+  }
+}
+
+/* Hide explanatory/duplicate UI but keep all controls and functions */
+.operator-mode .tx-card-head p,
+.operator-mode .tx-step,
+.operator-mode .tx-card-head .role-badge{
+  display:none;
+}
+
+
+/* =========================================================
+   WMS OPERATOR MOBILE SIMPLE
+   UI-only layer. Existing routing, API and functions remain.
+   ========================================================= */
+
+/* Operator home */
+.operator-mode .operator-home-grid{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px;
+  margin-top:12px;
+}
+.operator-mode .operator-home-btn{
+  min-height:92px;
+  border:1px solid #e4e9f0;
+  border-radius:14px;
+  background:#fff;
+  box-shadow:0 3px 12px rgba(15,23,42,.06);
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:7px;
+  cursor:pointer;
+  font-weight:750;
+  color:#253047;
+  transition:.15s ease;
+}
+.operator-mode .operator-home-btn:hover{
+  transform:translateY(-1px);
+  border-color:#b9d4f7;
+}
+.operator-mode .operator-home-btn .op-icon{
+  font-size:25px;
+  line-height:1;
+}
+.operator-mode .operator-home-btn .op-label{
+  font-size:12px;
+  letter-spacing:.02em;
+}
+.operator-mode .operator-home-scan{
+  grid-column:1/-1;
+  min-height:58px;
+  flex-direction:row;
+  background:#1769d2;
+  color:#fff;
+  border-color:#1769d2;
+  box-shadow:0 4px 12px rgba(23,105,210,.22);
+}
+.operator-mode .operator-home-scan .op-icon{
+  font-size:22px;
+}
+.operator-mode .operator-home-scan .op-label{
+  font-size:14px;
+}
+
+/* Hide admin/dashboard-heavy sections on operator home only */
+.operator-mode .operator-home-note{
+  display:none;
+}
+
+/* Compact transaction page */
+.operator-mode .tx-card{
+  margin-bottom:9px;
+}
+.operator-mode .tx-card-head{
+  padding:10px 13px;
+}
+.operator-mode .tx-card-head h4{
+  font-size:14px;
+}
+.operator-mode .tx-card-body{
+  padding:12px;
+}
+.operator-mode .tx-card:first-child .tx-card-head{
+  display:none;
+}
+.operator-mode .tx-card:first-child{
+  border:0;
+  box-shadow:none;
+  background:transparent;
+}
+.operator-mode .tx-card:first-child .tx-card-body{
+  padding:0 0 8px;
+}
+.operator-mode .tx-actions{
+  padding:10px 12px;
+}
+.operator-mode .tx-actions .btn.primary{
+  width:100%;
+  min-height:48px;
+}
+
+/* Make transaction fields single-column on phones */
+@media(max-width:700px){
+  .operator-mode .operator-home-grid{
+    grid-template-columns:repeat(2,1fr);
+    gap:8px;
+  }
+  .operator-mode .operator-home-btn{
+    min-height:88px;
+  }
+  .operator-mode .operator-home-scan{
+    min-height:54px;
+  }
+  .operator-mode .form-grid{
+    grid-template-columns:1fr;
+    gap:9px;
+  }
+  .operator-mode .field input,
+  .operator-mode .field select{
+    min-height:45px;
+  }
+  .operator-mode .page-head{
+    border-bottom:0;
+    margin-bottom:5px;
+  }
+}
+
+/* Hide unnecessary descriptive text in operator transactions */
+.operator-mode .tx-card-body > .muted,
+.operator-mode .tx-card-head p,
+.operator-mode .tx-card-head .tx-step,
+.operator-mode .tx-card-head .role-badge{
+  display:none;
+}
+
+
+/* FINAL OPERATOR CLEAN UI V2 */
+.operator-mode .page-head{display:none!important}
+.operator-mode .content{max-width:1180px!important;margin:0 auto!important;padding:14px 18px 30px!important}
+.operator-mode .tx-page{display:block!important}
+.operator-mode .tx-main{width:100%!important;max-width:900px!important;margin:0 auto!important}
+.operator-mode .tx-card{margin:0 0 10px!important}
+.operator-mode .tx-card-head,
+.operator-mode .tx-step,
+.operator-mode .tx-card-head p,
+.operator-mode .tx-card-head .role-badge,
+.operator-mode .tx-lock,
+.operator-mode .tx-side{display:none!important}
+
+.operator-mode .tx-card:first-child{
+  border:1px solid #e3e8ef!important;border-radius:14px!important;
+  background:#fff!important;box-shadow:0 3px 14px rgba(15,23,42,.06)!important;
+}
+.operator-mode .tx-card:first-child .tx-card-body{padding:12px!important}
+.operator-mode .tx-card:first-child .scan-format{display:none!important}
+.operator-mode .tx-card:first-child input{
+  min-height:46px!important;border-radius:10px!important;font-size:14px!important
+}
+.operator-mode .tx-card:first-child .btn{min-height:44px!important;border-radius:10px!important}
+
+.operator-mode .tx-card:nth-child(2){
+  border:1px solid #e3e8ef!important;border-radius:14px!important;
+  background:#fff!important;box-shadow:0 3px 14px rgba(15,23,42,.06)!important;
+  overflow:hidden;
+}
+.operator-mode .tx-card:nth-child(2) .tx-card-body{padding:14px!important}
+.operator-mode .tx-card:nth-child(2) .form-grid{
+  display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px!important
+}
+.operator-mode .tx-card:nth-child(2) .field span{
+  display:block;margin-bottom:5px;font-size:10px;line-height:1.2;
+  color:#667085;font-weight:700;text-transform:uppercase;letter-spacing:.04em
+}
+.operator-mode .tx-card:nth-child(2) input,
+.operator-mode .tx-card:nth-child(2) select{
+  width:100%;min-height:45px!important;border:1px solid #dbe2ea!important;
+  border-radius:9px!important;background:#fff!important;box-sizing:border-box
+}
+.operator-mode .tx-actions{
+  display:block!important;padding:12px 14px!important;margin:12px -14px -14px!important;
+  border-top:1px solid #edf0f4!important;background:#fafbfd!important
+}
+.operator-mode .tx-actions .btn.ghost{display:none!important}
+.operator-mode .tx-actions .btn.primary{
+  width:100%!important;min-height:48px!important;border-radius:10px!important;
+  font-size:13px!important;font-weight:800!important
+}
+
+.operator-mode .topbar{min-height:60px!important}
+.operator-mode #pageSub{display:none!important}
+.operator-mode .topbar h2{font-size:18px!important}
+
+.operator-mode .panel,
+.operator-mode .form-card,
+.operator-mode .table-card,
+.operator-mode .process{
+  border:1px solid #e3e8ef!important;border-radius:14px!important;
+  box-shadow:0 3px 14px rgba(15,23,42,.05)!important
+}
+.operator-mode .process>p,
+.operator-mode .process small.muted{display:none!important}
+
+.operator-mode .operator-home-grid{
+  width:100%;max-width:860px;margin:8px auto 0;
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px
+}
+.operator-mode .operator-home-btn{
+  min-height:94px;border:1px solid #e3e8ef;border-radius:14px;background:#fff;
+  box-shadow:0 3px 14px rgba(15,23,42,.06);display:flex;
+  flex-direction:column;justify-content:center;align-items:center;gap:7px;
+  color:#253047;font-weight:750
+}
+.operator-mode .operator-home-scan{
+  grid-column:1/-1;min-height:58px;flex-direction:row;
+  background:#1769d2;border-color:#1769d2;color:#fff
+}
+.operator-mode .op-icon{font-size:24px}
+.operator-mode .op-label{font-size:12px}
+
+@media(max-width:900px){
+  .operator-mode .content{padding:10px 12px 24px!important}
+}
+@media(max-width:700px){
+  .operator-mode .content{padding:8px!important}
+  .operator-mode .tx-card:nth-child(2) .form-grid{
+    grid-template-columns:1fr!important;gap:8px!important
+  }
+  .operator-mode .tx-card:first-child .scan-actions{
+    display:grid!important;grid-template-columns:1fr 1fr!important;gap:7px!important
+  }
+  .operator-mode .tx-card:first-child .scan-actions .btn{width:100%!important}
+  .operator-mode .tx-card:first-child .scan-actions .btn:first-child{grid-column:1/-1}
+  .operator-mode .operator-home-grid{gap:8px}
+  .operator-mode .operator-home-btn{min-height:84px}
+}
+@media(max-width:390px){
+  .operator-mode .topbar{padding:0 8px!important}
+  .operator-mode .topbar h2{font-size:16px!important}
+  .operator-mode .tx-card:nth-child(2) .tx-card-body{padding:10px!important}
+}
+
 </style>
 <style>
 /* ===== WMS UPDATE - TRANSACTION PART GROUP ===== */
@@ -150,9 +811,226 @@ body.scan-active{overflow:hidden!important}
 .monthly-delivery-kpi{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:8px}.monthly-delivery-kpi div{background:#f7f9fa;border:1px solid #e5eaee;border-radius:8px;padding:7px 9px}.monthly-delivery-kpi span{display:block;color:#71808d;font-size:9px;font-weight:800;letter-spacing:.06em}.monthly-delivery-kpi b{display:block;font-size:18px;margin-top:2px}.dashboard-status{display:flex;justify-content:space-between;gap:12px;margin-top:8px;font-size:10px;color:#71808d}.dashboard-status small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.fg-summary-row span{text-align:right;color:#71808d;font-size:10px}.fg-summary-row small{font-size:10px}.low-stock-table td small{display:block;color:#71808d;font-size:9px}.compact-note{padding-top:5px;color:#71808d;font-size:10px}.dashboard-panel-fg,.dashboard-panel-chart,.dashboard-panel-delivery,.dashboard-panel-low{display:flex;flex-direction:column}.dashboard-panel-fg #fgSummary,.dashboard-panel-delivery #monthlyDeliveryTable,.dashboard-panel-low #lowMaterial{min-height:0;flex:1}.dashboard-panel-chart #fgWeekChart{flex:1;min-height:0}
 </style>
 
+<style>
+/* =========================================================
+   WMS INDUSTRIAL UI STANDARD — V2
+   Presentation-only layer. Existing HTML IDs, JS handlers,
+   API calls, role rules, and warehouse flow are preserved.
+   ========================================================= */
+:root{
+  --wms-ink:#172533;--wms-navy:#173447;--wms-blue:#24617c;
+  --wms-bg:#f3f6f8;--wms-surface:#fff;--wms-line:#dce4e9;
+  --wms-muted:#687987;--wms-radius:12px;
+  --wms-shadow:0 2px 8px rgba(20,42,56,.045);
+}
+html{scroll-behavior:smooth}
+body{background:var(--wms-bg);color:var(--wms-ink);-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font-family:inherit}
+button{touch-action:manipulation}
+.main{background:var(--wms-bg);min-width:0}
+.topbar{height:68px;padding:0 24px;background:#fff;border-bottom:1px solid var(--wms-line);box-shadow:none}
+.topbar h2{font-size:18px;font-weight:750;letter-spacing:-.025em;color:var(--wms-ink)}
+.topbar #pageSub{font-size:11px;color:var(--wms-muted)}
+.top-right{gap:10px}
+.api-state{white-space:nowrap;font-size:11px}
+.refresh{width:38px;height:38px;border-radius:10px;color:var(--wms-navy);font-size:18px}
+.role-badge{max-width:100px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.content{padding:22px 24px;max-width:1680px}
+.page-head{margin:0 0 18px;align-items:flex-start}
+.page-head h3{font-size:25px;line-height:1.2;font-weight:750;letter-spacing:-.035em;color:var(--wms-ink)}
+.page-head p{font-size:12px;line-height:1.5;color:var(--wms-muted);margin-top:5px}
+.panel,.form-card,.table-card,.tx-card,.process{border:1px solid var(--wms-line);border-radius:var(--wms-radius);box-shadow:var(--wms-shadow);background:#fff}
+.panel,.form-card,.table-card{padding:18px}
+.panel h4,.panel-head h4{font-size:14px;font-weight:750;color:var(--wms-ink)}
+/* Navigation and page shell */
+.sidebar{background:#132a39;border-right:0;box-shadow:3px 0 14px rgba(15,35,48,.07)}
+.sidebar-head{border-bottom:1px solid rgba(255,255,255,.10)}
+.sidebar .logo{background:#fff;color:var(--wms-navy);border-radius:10px}
+.nav-sec{color:#91a6b5;font-size:10px;letter-spacing:.09em}
+.nav-item{min-height:40px;border-radius:8px;font-size:12px;transition:background .15s ease}
+.nav-item:hover{background:rgba(255,255,255,.08);transform:none}
+.nav-item.active{background:#28485b;color:#fff;box-shadow:inset 3px 0 #86b5cf}
+.logout{border-color:rgba(255,255,255,.18);border-radius:9px}
+/* Forms: consistent industrial form controls */
+.field{min-width:0;gap:6px}
+.field>span{font-size:11px;font-weight:700;color:#536472}
+.field input,.field select,.field textarea,
+.form-grid input,.form-grid select,.form-grid textarea,
+input.scan-input,.manual-inline input,.testing-filter-search,
+.stock-summary-toolbar input{min-width:0;max-width:100%;min-height:42px;padding:10px 12px;border:1px solid #cbd6de;border-radius:9px;background:#fff;color:var(--wms-ink);font-size:13px;box-shadow:none;outline:none;transition:border-color .15s,box-shadow .15s}
+.field input:focus,.field select:focus,.field textarea:focus,
+.form-grid input:focus,.form-grid select:focus,.form-grid textarea:focus,
+input.scan-input:focus,.manual-inline input:focus{border-color:#397b9b;box-shadow:0 0 0 3px rgba(57,123,155,.12)}
+.form-grid{gap:14px}
+.btn{min-height:40px;padding:9px 14px;border-radius:9px;font-size:12px;font-weight:700;letter-spacing:0;box-shadow:none;transition:background .15s,border-color .15s,transform .15s}
+.btn:active{transform:translateY(1px)}
+.btn.primary{background:var(--wms-navy);border:1px solid var(--wms-navy);color:#fff}
+.btn.primary:hover{background:#214d66}
+.btn.ghost{background:#fff;border:1px solid #cbd6de;color:#344b5a}
+.btn.ghost:hover{background:#f3f7f9;border-color:#9eafb9}
+/* Transactions: compact, structured, clear hierarchy */
+.tx-page{grid-template-columns:minmax(0,1fr) 260px;gap:14px}
+.tx-card{margin-bottom:14px;overflow:hidden}
+.tx-card-head{padding:14px 17px;background:#fff;align-items:center}
+.tx-card-head h4{font-size:15px;font-weight:750;line-height:1.35;margin:5px 0 0}
+.tx-card-head p{font-size:11px;line-height:1.45;margin-top:4px;color:var(--wms-muted)}
+.tx-step{font-size:9px;letter-spacing:.09em;color:#526675}
+.tx-step b{width:23px;height:23px;background:#eaf1f5;color:var(--wms-navy)}
+.tx-card-body{padding:16px 17px}
+.tx-actions{padding:12px 17px;background:#f8fafb;gap:8px}
+.tx-actions .btn.primary{min-width:150px}
+.tx-side{top:82px}
+.tx-side .panel{padding:15px;margin-bottom:10px}
+.tx-flow .node{font-size:10px;padding:7px 9px;border-radius:7px}
+/* Scanner: visually separate scan, camera controls, and manual fallback */
+.inline-scanner{background:#f8fafb;border:1px solid #dce5ea;border-radius:11px;padding:13px;margin:0}
+.inline-scanner-head{align-items:center;margin-bottom:11px}
+.inline-scanner-head b{font-size:14px;font-weight:750;color:var(--wms-ink)}
+.inline-scanner-head small{font-size:11px;line-height:1.4}
+.scan-op-badge{max-width:135px;white-space:normal;font-size:10px;line-height:1.35;padding:7px 9px;background:#e9f1f5;color:#345568;border-radius:8px}
+.inline-scanner-row{display:grid;grid-template-columns:minmax(0,1fr) auto auto auto;gap:7px;align-items:stretch}
+.inline-scanner-row .scan-input{width:100%;min-width:0}
+.inline-scanner-row .btn{white-space:nowrap;min-height:42px;padding:9px 11px;font-size:11px}
+.manual-inline{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:7px;margin-top:9px}
+.manual-inline input{width:100%}
+.manual-inline .btn{min-width:112px}
+.inline-scan-status{font-size:11px;line-height:1.45;padding:8px 1px 0;min-height:25px}
+.qr-reader{overflow:hidden;border-radius:10px}
+/* KPI and dashboard */
+.dash-hero{align-items:center;padding:20px 22px;border-radius:14px;margin-bottom:14px;box-shadow:none;gap:16px}
+.dash-hero h3{font-size:clamp(21px,2vw,29px);line-height:1.2;letter-spacing:-.035em;margin:7px 0}
+.dash-eyebrow{font-size:10px;letter-spacing:.13em}
+.dash-date{font-size:12px;padding:9px 11px;border-radius:8px}
+.dashboard-kpis-compact,.kpis{gap:12px;margin-bottom:14px}
+.kpi{min-width:0;border-radius:12px;box-shadow:none;padding:16px;min-height:112px}
+.kpi span{font-size:10px;line-height:1.4;letter-spacing:.07em}
+.kpi b{font-size:27px;line-height:1.2;margin-top:9px}
+.kpi small{font-size:11px;margin-top:5px}
+.dashboard-grid{gap:14px}
+.dashboard-grid .panel{min-width:0}
+/* Tables */
+.table-card,.scroll,.table-scroll{max-width:100%;overflow:auto;border-radius:10px}
+table,.data-table{border-collapse:separate;border-spacing:0;width:100%}
+thead th,.data-table th{background:#f4f7f9;color:#536573;font-size:10px;font-weight:800;letter-spacing:.045em;text-transform:uppercase;white-space:nowrap}
+td,th,.data-table td,.data-table th{padding:10px 11px;border-bottom:1px solid #e9eef1;vertical-align:middle}
+tbody tr:hover{background:#f8fbfc}
+/* Mobile layout: remove wasted width and keep controls readable */
+@media(max-width:900px){
+  .sidebar{width:280px;z-index:30}
+  .main{margin-left:0;width:100%}
+  .topbar{height:64px;padding:0 13px;gap:8px}
+  .title-wrap{gap:9px;min-width:0}
+  .topbar h2{font-size:17px;max-width:145px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .topbar #pageSub{display:none}
+  .top-right{gap:6px}
+  .api-state{font-size:10px;max-width:80px;white-space:normal;line-height:1.2}
+  .refresh{width:36px;height:36px;padding:4px}
+  #userInfo{display:none}
+  .role-badge{max-width:78px;font-size:10px}
+  .content{padding:13px 12px 24px}
+  .page-head{margin-bottom:13px}
+  .page-head h3{font-size:22px}
+  .page-head p{font-size:11px}
+  .tx-page{grid-template-columns:minmax(0,1fr);gap:10px}
+  .tx-side{display:none}
+  .tx-card{margin-bottom:11px;border-radius:11px}
+  .tx-card-head{padding:12px 13px}
+  .tx-card-head h4{font-size:14px}
+  .tx-card-head p{font-size:11px}
+  .tx-card-body{padding:12px}
+  .tx-actions{padding:11px 12px}
+  .form-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:11px}
+  .field input,.field select,.field textarea,.form-grid input,.form-grid select,.form-grid textarea{min-height:43px;font-size:13px}
+  .inline-scanner{padding:11px;border-radius:10px}
+  .inline-scanner-head{margin-bottom:9px}
+  .inline-scanner-head b{font-size:13px}
+  .inline-scanner-head small{font-size:10px}
+  .inline-scanner-row{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:7px}
+  .inline-scanner-row input{grid-column:1/-1}
+  .inline-scanner-row .btn{width:100%;min-width:0;min-height:40px;padding:8px 6px;font-size:11px}
+  .manual-inline{grid-template-columns:minmax(0,1fr) auto;gap:7px}
+  .manual-inline .btn{min-width:95px;padding:8px 10px}
+  .inline-scan-status{font-size:11px}
+  .process-cards{grid-template-columns:minmax(0,1fr);gap:11px}
+  .process{border-radius:11px}
+  .process>h4{padding:12px 14px;font-size:13px}
+  .process>p{padding:0 14px;margin:10px 0;font-size:11px}
+  .process .form-grid{padding:0 13px}
+  .process .form-actions{padding:11px 13px}
+  .panel,.form-card,.table-card{padding:13px;border-radius:11px}
+  .dash-hero{padding:16px;border-radius:12px;align-items:flex-start;flex-direction:column;gap:12px}
+  .dash-hero h3{font-size:22px}
+  .dash-hero>div:last-child{width:100%;justify-content:space-between;flex-wrap:wrap}
+  .dashboard-kpis-compact,.kpis{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+  .kpi{padding:12px;min-height:94px}
+  .kpi span{font-size:9px}
+  .kpi b{font-size:23px;margin-top:7px}
+  .dashboard-grid{grid-template-columns:minmax(0,1fr);gap:10px}
+  .dashboard-grid .panel{padding:13px}
+  .form-actions,.tx-actions{gap:8px}
+  .tx-actions .btn{min-height:44px}
+  .stock-summary-toolbar input,.testing-filter-search{min-width:0;width:100%}
+}
+@media(max-width:430px){
+  .content{padding:10px 9px 20px}
+  .topbar{padding:0 9px}
+  .topbar h2{max-width:118px;font-size:16px}
+  .api-state{max-width:62px;font-size:9px}
+  .role-badge{max-width:64px;padding:5px 7px}
+  .page-head h3{font-size:20px}
+  .tx-card-head{align-items:flex-start}
+  .tx-card-head .role-badge{max-width:82px;font-size:9px}
+  .tx-card-body{padding:10px}
+  .inline-scanner{padding:9px}
+  .inline-scanner-head{align-items:flex-start}
+  .scan-op-badge{max-width:94px;font-size:9px}
+  .manual-inline .btn{min-width:88px;font-size:10px;padding:8px 7px}
+  .form-grid{gap:9px}
+  .field>span{font-size:10px}
+  .field input,.field select,.field textarea,.form-grid input,.form-grid select,.form-grid textarea{padding:9px;font-size:12px}
+  .dashboard-kpis-compact,.kpis{gap:7px}
+  .kpi{padding:10px;min-height:86px}
+  .kpi b{font-size:21px}
+  .kpi span{font-size:8px}
+}
+/* Camera fullscreen remains controlled by existing scanner JavaScript. */
+
+
+/* ===== WMS INDUSTRIAL NAVIGATION POLISH V3 ===== */
+:root{--sidebar-deep:#071c2b;--sidebar-mid:#0c2a40;--sidebar-blue:#1976ed;--sidebar-cyan:#48c7f5}
+.sidebar{
+  width:286px;padding:18px 13px 16px;display:flex;flex-direction:column;gap:0;
+  background:radial-gradient(ellipse at 8% 0%,rgba(39,117,176,.22),transparent 38%),linear-gradient(160deg,#102f44 0%,#081f31 52%,#061827 100%);
+  border-right:1px solid rgba(255,255,255,.08);box-shadow:10px 0 32px rgba(3,18,30,.14);
+  scrollbar-width:thin;scrollbar-color:rgba(164,198,218,.28) transparent;
+}
+.sidebar:before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.15;background:linear-gradient(135deg,transparent 0 38%,rgba(100,174,220,.10) 38.2%,transparent 39%),linear-gradient(45deg,transparent 0 70%,rgba(100,174,220,.07) 70.2%,transparent 71%);}
+.sidebar>*{position:relative;z-index:1}
+.sidebar-head{display:flex;gap:12px;align-items:center;padding:8px 10px 20px;margin:0 2px 8px;border-bottom:1px solid rgba(190,220,240,.16)}
+.sidebar-head .logo{width:48px;height:48px;min-width:48px;border-radius:15px;background:linear-gradient(145deg,#fff,#dbeefa);color:#10384f;font-size:21px;box-shadow:0 6px 18px rgba(0,0,0,.16)}
+.sidebar-head b{display:block;font-size:15px;letter-spacing:.045em;color:#f5fbff}.sidebar-head small{display:block;margin-top:4px;font-size:11px;color:#a6bdcc}
+.sidebar-tagline{display:block;margin-top:14px;font-style:normal;font-size:8px;letter-spacing:.12em;color:#7fa7bd;white-space:nowrap}
+.sidebar-profile{display:flex;align-items:center;gap:10px;margin:8px 3px 14px;padding:12px 10px;border:1px solid rgba(185,218,239,.13);border-radius:14px;background:linear-gradient(110deg,rgba(255,255,255,.075),rgba(255,255,255,.025));}
+.profile-avatar{display:grid;place-items:center;width:42px;height:42px;min-width:42px;border-radius:50%;background:linear-gradient(145deg,#436c91,#234763);border:1px solid rgba(255,255,255,.18);color:#fff;font-size:17px;font-weight:800}
+.profile-copy{display:flex;flex-direction:column;gap:4px;min-width:0;flex:1}.profile-copy b{font-size:12px;color:#f2f8fc;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.profile-copy small{font-size:10px;color:#9bb4c5}
+.profile-online{display:flex;align-items:center;gap:5px;padding:7px 9px;border-radius:18px;background:rgba(255,255,255,.055);color:#d3e5ef;font-size:9px;white-space:nowrap}.profile-online i{display:block;width:7px;height:7px;border-radius:50%;background:#30d58a;box-shadow:0 0 0 3px rgba(48,213,138,.12)}
+#nav{min-height:0;overflow:visible}.nav-section{margin:2px 0 5px}.nav-sec{min-height:38px;padding:10px 9px;color:#9cb5c5;font-size:10px;font-weight:800;letter-spacing:.12em;border-radius:10px;transition:background .18s,color .18s}.nav-sec:hover,.nav-sec.open{background:rgba(255,255,255,.045);color:#eaf6ff}.nav-sec .section-title{gap:9px}.nav-sec .section-icon{font-size:13px;color:#76a9c8}.nav-sec .chev{font-size:13px;color:#85a6b8}.nav-group{padding:2px 0 5px 0}.nav-item{display:flex;gap:11px;align-items:center;min-height:44px;margin:3px 0;padding:10px 12px;border:1px solid transparent;border-radius:12px;color:#c8d9e4;font-size:12px;font-weight:550;background:transparent}.nav-item i{display:grid;place-items:center;width:28px;min-width:28px;height:28px;border-radius:9px;background:rgba(179,216,239,.08);color:#d4e9f6;font-size:15px}.nav-item:hover{background:rgba(255,255,255,.075);border-color:rgba(255,255,255,.045);color:#fff}.nav-item.active{background:linear-gradient(105deg,#1456ad,#1678e8);border-color:rgba(100,192,255,.48);color:#fff;box-shadow:inset 4px 0 #5ad1ff,0 5px 14px rgba(0,73,158,.18)}.nav-item.active i{background:rgba(255,255,255,.13);color:#fff}
+.logout{display:flex;align-items:center;justify-content:center;gap:10px;min-height:48px;margin:14px 3px 0;padding:12px;border:1px solid rgba(255,100,110,.55);border-radius:12px;background:rgba(255,76,91,.055);color:#ff7079;font-size:13px;font-weight:750;transition:background .18s,border-color .18s}.logout:hover{background:rgba(255,76,91,.13);border-color:rgba(255,100,110,.8)}.logout-icon{font-size:18px}
+/* Keep drawer above the page on phones, with a proper dimmed backdrop. */
+@media(max-width:900px){
+ .sidebar{width:min(88vw,350px);max-width:350px;padding:15px 12px 18px;overflow-y:auto;transform:translateX(-105%);transition:transform .24s ease;z-index:30;bottom:0;}
+ .sidebar.open{transform:translateX(0)}
+ body.wms-nav-open:after{content:"";position:fixed;inset:0;background:rgba(3,15,25,.48);backdrop-filter:blur(2px);z-index:20}
+ .sidebar-head{padding-bottom:17px}.sidebar-tagline{font-size:7px;letter-spacing:.08em}
+ .sidebar-profile{margin-bottom:10px}.nav-sec{min-height:40px}.nav-item{min-height:46px;font-size:13px}
+ .main{position:relative;z-index:1}
+}
+@media(min-width:901px){.sidebar{overflow-y:auto}.sidebar .logout{margin-top:auto;flex-shrink:0}}
+
+</style>
 </head><body>
 <div id="loginPage" class="login-page"><div class="login-card"><div class="brand-mark">WMS</div><div class="brand-sub">WAREHOUSE MANAGEMENT SYSTEM</div><h1>System Login</h1><p>Warehouse & inventory control</p><form id="loginForm"><label>Username</label><input id="username" required><label>Password</label><input id="password" type="password" required><button>Sign In</button><div id="loginMessage" class="message"></div></form></div></div>
-<div id="appPage" class="app hidden"><aside class="sidebar"><div class="sidebar-head"><div class="logo">W</div><div><b>WMS SYSTEM</b><small>Warehouse Control</small></div></div><nav id="nav"></nav><button id="logoutBtn" class="logout">↪ Logout</button></aside>
+<div id="appPage" class="app hidden"><aside class="sidebar"><div class="sidebar-head"><div class="logo">W</div><div><b>WMS SYSTEM</b><small>Warehouse Control</small><em class="sidebar-tagline">EFFICIENCY&nbsp; · &nbsp;ACCURACY&nbsp; · &nbsp;PRODUCTIVITY</em></div></div><div class="sidebar-profile"><div class="profile-avatar" id="sidebarAvatar">W</div><div class="profile-copy"><b id="sidebarUserName">WMS User</b><small id="sidebarUserRole">Warehouse Operator</small></div><span class="profile-online"><i></i> Online</span></div><nav id="nav"></nav><button id="logoutBtn" class="logout"><span class="logout-icon">⇥</span> Logout</button></aside>
 <main class="main"><header class="topbar"><div class="title-wrap"><button id="mobileMenu" class="mobile">☰</button><div><h2 id="pageTitle">Dashboard</h2><span id="pageSub">Inventory Control & Warehouse Overview</span></div></div><div class="top-right"><span id="apiState" class="api-state">● Checking</span><button id="refreshBtn" class="refresh">↻</button><b id="userInfo">-</b><span id="roleBadge" class="role-badge"></span></div></header><section id="content" class="content"></section></main></div>
 <div id="toast" class="toast"></div>
 <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
@@ -209,7 +1087,7 @@ function buildNav(){
 }
 async function loadCache(){const jobs=[['parts','parts'],['warehouses','warehouses'],['customers','customers'],['stock','stock'],['productionParts','productionParts']];const results=await Promise.all(jobs.map(async([k,a])=>{try{return [k,await apiGet(a)]}catch(e){return [k,{success:false,error:e}]}}));results.forEach(([k,r])=>{if(r.success)CACHE[k]=r.data||[]});}
 function openNavSectionFor(page){const b=document.querySelector(`.nav-item[data-page="${page}"]`);if(!b)return;const sec=b.closest('.nav-section');if(!sec)return;const group=sec.querySelector('.nav-group');const head=sec.querySelector('.nav-sec');if(group&&!group.classList.contains('open')){group.classList.add('open');head.classList.add('open');}}
-function go(page){openNavSectionFor(page);if(!canAccessPage(page)){toast('Akses ditolak. Menu ini khusus ADMIN.',false);return;}if(page!=='scan'&&document.getElementById('scanPageWrap')?.classList.contains('scan-fullscreen-wrap')){exitScanFullscreen();}const m=META[page]||META.dashboard;document.getElementById('pageTitle').textContent=m[0];document.getElementById('pageSub').textContent=m[1];document.querySelectorAll('.nav-item').forEach(x=>x.classList.toggle('active',x.dataset.page===page));document.getElementById('nav').classList.remove('open');if(page==='dashboard')dashboard();else if(page==='scan')scanPage();else if(page==='stock')stockPage();else if(page==='stock-summary')stockSummaryPage();else if(page==='stock-card')stockCardPage();else if(page==='transactions')txPage();else if(page==='receiving')receivingPage();else if(page==='transfer')transferPage();else if(page==='issue')issuePage();else if(page==='production')productionPage();else if(page==='testing')testingPage();else if(page==='delivery')deliveryPage();else if(page==='stock-opname')opnamePage();else if(page==='stock-opname-report')stockOpnameReportPage();else if(page==='delivery-summary')deliverySummaryPage();else if(page==='transaction-summary')transactionSummaryPage();else if(page==='transaction-revision')transactionRevisionPage();else if(page==='master-part')masterPartPage();else if(page==='warehouse')warehousePage();else if(page==='customer')customerPage();else if(page==='bom')bomPage();else if(page==='import-center')importCenterPage();}
+function go(page){openNavSectionFor(page);if(!canAccessPage(page)){toast('Akses ditolak. Menu ini khusus ADMIN.',false);return;}if(page!=='scan'&&document.getElementById('scanPageWrap')?.classList.contains('scan-fullscreen-wrap')){exitScanFullscreen();}const m=META[page]||META.dashboard;document.getElementById('pageTitle').textContent=m[0];document.getElementById('pageSub').textContent=m[1];document.querySelectorAll('.nav-item').forEach(x=>x.classList.toggle('active',x.dataset.page===page));document.getElementById('nav').classList.remove('open');if(page==='dashboard'){if(String(user()?.Role||'').trim().toUpperCase()==='OPERATOR')operatorHome();else dashboard();}else if(page==='scan')scanPage();else if(page==='stock')stockPage();else if(page==='stock-summary')stockSummaryPage();else if(page==='stock-card')stockCardPage();else if(page==='transactions')txPage();else if(page==='receiving')receivingPage();else if(page==='transfer')transferPage();else if(page==='issue')issuePage();else if(page==='production')productionPage();else if(page==='testing')testingPage();else if(page==='delivery')deliveryPage();else if(page==='stock-opname')opnamePage();else if(page==='stock-opname-report')stockOpnameReportPage();else if(page==='delivery-summary')deliverySummaryPage();else if(page==='transaction-summary')transactionSummaryPage();else if(page==='transaction-revision')transactionRevisionPage();else if(page==='master-part')masterPartPage();else if(page==='warehouse')warehousePage();else if(page==='customer')customerPage();else if(page==='bom')bomPage();else if(page==='import-center')importCenterPage();}
 function shell(title,desc,body,action=''){document.getElementById('content').innerHTML=`<div class="page-head"><div><h3>${title}</h3><p>${desc}</p></div>${action}</div>${body}`}
 function sel(name,items,placeholder='Select...'){return `<select id="${name}"><option value="">${placeholder}</option>${(items||[]).map(x=>{const o=(x!==null&&typeof x==='object')?x:{id:x,label:x};return `<option value="${esc(o.id??'')}">${esc(o.label??o.id??'')}</option>`}).join('')}</select>`}
 function normalizePartGroup(x){return String(x||'').trim();}
@@ -224,6 +1102,40 @@ function productionParts(kind){
 function formCard(fields,submitText='Save'){return `<div class="form-card"><div class="form-grid">${fields.join('')}</div><div class="form-actions"><button class="btn ghost" onclick="go(document.querySelector('.nav-item.active')?.dataset.page||'dashboard')">Cancel</button><button class="btn primary" id="saveBtn">${submitText}</button></div></div>`}
 function txLayout(config){return `<div class="tx-page"><div class="tx-main">${config.main}</div><aside class="tx-side"><div class="panel"><h4>Process Flow</h4><div class="tx-flow">${config.flow||''}</div></div><div class="panel"><h4>Transaction Status</h4><div class="status-list"><div><span>Operator</span><b>${esc(user().FullName||user().Username||'-')}</b></div><div><span>Role</span><b>${esc(String(user().Role||'').toUpperCase())}</b></div><div><span>API</span><b class="system-ok">● Connected</b></div></div></div>${config.side||''}</aside></div>`}
 function f(label,id,type='text',extra=''){return `<label class="field"><span>${label}</span><input id="${id}" type="${type}" ${extra}></label>`}function fs(label,id,html){return `<label class="field"><span>${label}</span>${html}</label>`}
+
+function operatorHome(){
+  shell('WMS','Operator Menu',`
+    <div class="operator-home-grid">
+      <button class="operator-home-btn operator-home-scan" onclick="go('scan')">
+        <span class="op-icon">📷</span><span class="op-label">SCAN TRANSACTION</span>
+      </button>
+      <button class="operator-home-btn" onclick="go('receiving')">
+        <span class="op-icon">📥</span><span class="op-label">RECEIVING</span>
+      </button>
+      <button class="operator-home-btn" onclick="go('transfer')">
+        <span class="op-icon">🔄</span><span class="op-label">TRANSFER</span>
+      </button>
+      <button class="operator-home-btn" onclick="go('issue')">
+        <span class="op-icon">📤</span><span class="op-label">ISSUE</span>
+      </button>
+      <button class="operator-home-btn" onclick="go('production')">
+        <span class="op-icon">🏭</span><span class="op-label">PRODUCTION</span>
+      </button>
+      <button class="operator-home-btn" onclick="go('testing')">
+        <span class="op-icon">🧪</span><span class="op-label">TESTING</span>
+      </button>
+      <button class="operator-home-btn" onclick="go('stock')">
+        <span class="op-icon">📦</span><span class="op-label">STOCK</span>
+      </button>
+      <button class="operator-home-btn" onclick="go('delivery')">
+        <span class="op-icon">🚚</span><span class="op-label">FG DELIVERY</span>
+      </button>
+      <button class="operator-home-btn" onclick="go('stock-opname')">
+        <span class="op-icon">📋</span><span class="op-label">STOCK OPNAME</span>
+      </button>
+    </div>
+  `);
+}
 async function dashboard(){
   shell('Dashboard','Inventory Control & Warehouse Overview',`
     <div class="dash-hero">
@@ -1902,7 +2814,7 @@ async function submit(action,data,label,buttonId=null){
 function v(id){return document.getElementById(id)?.value?.trim()||''}
 async function refreshStockOnly(){try{const r=await apiGet('stock');if(r.success)CACHE.stock=r.data||[]}catch(e){}}
 async function refreshAll(){await loadCache();go(document.querySelector('.nav-item.active')?.dataset.page||'dashboard')}
-document.getElementById('logoutBtn').onclick=()=>{logoutUser();};document.getElementById('refreshBtn').onclick=refreshAll;document.getElementById('mobileMenu').onclick=()=>document.querySelector('.sidebar').classList.toggle('open');
+document.getElementById('logoutBtn').onclick=()=>{logoutUser();};document.getElementById('refreshBtn').onclick=refreshAll;document.getElementById('mobileMenu').onclick=()=>{const side=document.querySelector('.sidebar');const opened=side.classList.toggle('open');document.body.classList.toggle('wms-nav-open',opened);};
 async function handleLogin(event){
   event.preventDefault();
   const msg=document.getElementById('loginMessage');
@@ -1924,7 +2836,17 @@ async function handleLogin(event){
 function showApp(u){
   document.getElementById('loginPage').classList.add('hidden');
   document.getElementById('appPage').classList.remove('hidden');
-  document.getElementById('userInfo').textContent=`${u.FullName||u.Username||'-'}`;document.getElementById('roleBadge').textContent=(u.Role||'').toUpperCase();buildNav();
+  const role=String(u.Role||'').trim().toUpperCase();
+  document.body.classList.toggle('operator-mode',role==='OPERATOR');
+  document.getElementById('userInfo').textContent=`${u.FullName||u.Username||'-'}`;
+  document.getElementById('roleBadge').textContent=role;
+  const sidebarName=document.getElementById('sidebarUserName');
+  const sidebarRole=document.getElementById('sidebarUserRole');
+  const sidebarAvatar=document.getElementById('sidebarAvatar');
+  if(sidebarName) sidebarName.textContent=u.FullName||u.Username||'WMS User';
+  if(sidebarRole) sidebarRole.textContent=role==='ADMIN'?'System Administrator':(role==='OPERATOR'?'Warehouse Operator':(role||'WMS User'));
+  if(sidebarAvatar) sidebarAvatar.textContent=String(u.FullName||u.Username||'W').trim().charAt(0).toUpperCase()||'W';
+  buildNav();
 }
 document.getElementById('loginForm').addEventListener('submit',handleLogin);document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement&&html5Scanner){document.getElementById('scanPageWrap')?.classList.remove('scan-fullscreen-wrap');document.body.classList.remove('scan-active');}});
 (async()=>{
@@ -1938,5 +2860,5 @@ document.getElementById('loginForm').addEventListener('submit',handleLogin);docu
   }
   try{await apiGet('test');document.getElementById('apiState').textContent='● API Ready';document.getElementById('apiState').className='api-state good';}catch(e){document.getElementById('loginMessage').textContent='API tidak dapat dihubungi: '+e.message;}
 })();
-document.addEventListener('click',e=>{if(window.innerWidth<=900 && document.querySelector('.sidebar.open') && !e.target.closest('.sidebar') && !e.target.closest('#mobileMenu')) document.querySelector('.sidebar').classList.remove('open');});
+document.addEventListener('click',e=>{if(window.innerWidth<=900 && document.querySelector('.sidebar.open') && !e.target.closest('.sidebar') && !e.target.closest('#mobileMenu')) document.querySelector('.sidebar').classList.remove('open');document.body.classList.remove('wms-nav-open');});
 </script></body></html>

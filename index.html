@@ -828,6 +828,38 @@ body.scan-active{overflow:hidden!important}
   }
 }
 
+
+/* FINAL FIX: opaque mobile sidebar with readable contrast */
+.sidebar{
+  background:#ffffff !important;
+  color:#263746 !important;
+  opacity:1 !important;
+  isolation:isolate;
+  box-shadow:8px 0 28px rgba(20,40,55,.18) !important;
+  border-right:1px solid #dce5eb !important;
+}
+.sidebar:before{display:none !important}
+.sidebar-head{border-bottom:1px solid #e5edf2 !important}
+.sidebar-head b{color:#183447 !important}
+.sidebar-head small{color:#718594 !important}
+.sidebar-tagline{color:#7893a4 !important}
+.sidebar-profile{
+  background:#f7fafc !important;
+  border:1px solid #e0e9ef !important;
+}
+.profile-copy b{color:#20394a !important}
+.profile-copy small{color:#718594 !important}
+.profile-online{background:#edf8f2 !important;color:#397653 !important}
+.nav-sec,.nav-sec:hover,.nav-sec.open{color:#657b89 !important}
+.nav-sec .section-icon,.nav-sec .chev{color:#6c91a7 !important}
+.nav-item{color:#334b5b !important;background:transparent !important}
+.nav-item i{background:#edf3f7 !important;color:#45677d !important}
+.nav-item:hover{background:#edf5fb !important;color:#173f5d !important;border-color:#dceaf3 !important}
+.nav-item.active{background:#e8f3ff !important;border-color:#c7e1fb !important;color:#145ca8 !important;box-shadow:inset 4px 0 #48c7f5 !important}
+.nav-item.active i{background:#d4e9ff !important;color:#145ca8 !important}
+.sidebar .logout{background:#fff7f7 !important;border-color:#f2c7ca !important;color:#b83a43 !important}
+.sidebar .logout:hover{background:#ffeded !important}
+
 </style>
 <style>
 /* ===== WMS UPDATE - TRANSACTION PART GROUP ===== */
@@ -1095,12 +1127,21 @@ function esc(x){return String(x??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&l
 function toast(msg,ok=true){const t=document.getElementById('toast');t.textContent=msg;t.className='toast '+(ok?'ok':'err')+' show';setTimeout(()=>t.className='toast',3000)}
 function user(){try{return JSON.parse(sessionStorage.getItem('wmsUser')||'{}')}catch{return {}}}
 function isAdmin(){return String(user().Role||'').trim().toUpperCase()==='ADMIN'}
-function canAccessPage(page){if(isAdmin())return true;return !['master-part','warehouse','customer','bom','import-center','transaction-revision'].includes(page)}
+function isViewer(){return String(user().Role||'').trim().toUpperCase()==='VIEWER'}
+function canAccessPage(page){
+  if(isAdmin())return true;
+  if(isViewer())return ['dashboard','stock','stock-summary','stock-card','stock-opname-report','delivery-summary','transaction-summary','transactions'].includes(page);
+  return !['master-part','warehouse','customer','bom','import-center','transaction-revision'].includes(page);
+}
 function buildNav(){
-  const admin=isAdmin();
+  const admin=isAdmin(), viewer=isViewer();
   const nav=document.getElementById('nav');
   nav.innerHTML=NAV.map(([sec,items],idx)=>{
-    const visible=items.filter(x=>!x[3]||admin);
+    let visible=items.filter(x=>!x[3]||admin);
+    if(viewer){
+      const allowed=['dashboard','stock','stock-summary','stock-card','stock-opname-report','delivery-summary','transaction-summary','transactions'];
+      visible=items.filter(x=>allowed.includes(x[0]));
+    }
     if(!visible.length)return '';
     return `<div class="nav-section" data-section="${idx}">
       <div class="nav-sec" role="button" tabindex="0"><span class="section-title"><span class="section-icon">▸</span>${sec}</span><span class="chev">⌄</span></div>
@@ -1119,9 +1160,18 @@ function buildNav(){
   const current=document.querySelector(`.nav-item[data-page="${location.hash.replace('#','')}"]`);
   if(current){const sec=current.closest('.nav-section');sec?.querySelector('.nav-sec')?.click();}
 }
+function applyRoleProfile(){
+  if(!isViewer())return;
+  const roleEl=document.getElementById('sidebarUserRole');
+  if(roleEl)roleEl.textContent='Viewer · Read Only';
+  const badge=document.getElementById('roleBadge');
+  if(badge)badge.textContent='VIEWER';
+  const info=document.getElementById('userInfo');
+  if(info)info.textContent=String(user().FullName||user().Username||'Viewer');
+}
 async function loadCache(){const jobs=[['parts','parts'],['warehouses','warehouses'],['customers','customers'],['stock','stock'],['productionParts','productionParts']];const results=await Promise.all(jobs.map(async([k,a])=>{try{return [k,await apiGet(a)]}catch(e){return [k,{success:false,error:e}]}}));results.forEach(([k,r])=>{if(r.success)CACHE[k]=r.data||[]});}
 function openNavSectionFor(page){const b=document.querySelector(`.nav-item[data-page="${page}"]`);if(!b)return;const sec=b.closest('.nav-section');if(!sec)return;const group=sec.querySelector('.nav-group');const head=sec.querySelector('.nav-sec');if(group&&!group.classList.contains('open')){group.classList.add('open');head.classList.add('open');}}
-function go(page){openNavSectionFor(page);if(!canAccessPage(page)){toast('Akses ditolak. Menu ini khusus ADMIN.',false);return;}closeMobileSidebar();if(page!=='scan'&&document.getElementById('scanPageWrap')?.classList.contains('scan-fullscreen-wrap')){exitScanFullscreen();}const m=META[page]||META.dashboard;document.getElementById('pageTitle').textContent=m[0];document.getElementById('pageSub').textContent=m[1];document.querySelectorAll('.nav-item').forEach(x=>x.classList.toggle('active',x.dataset.page===page));document.getElementById('nav').classList.remove('open');if(page==='dashboard'){if(String(user()?.Role||'').trim().toUpperCase()==='OPERATOR')operatorHome();else dashboard();}else if(page==='scan')scanPage();else if(page==='stock')stockPage();else if(page==='stock-summary')stockSummaryPage();else if(page==='stock-card')stockCardPage();else if(page==='transactions')txPage();else if(page==='receiving')receivingPage();else if(page==='transfer')transferPage();else if(page==='issue')issuePage();else if(page==='production')productionPage();else if(page==='testing')testingPage();else if(page==='delivery')deliveryPage();else if(page==='stock-opname')opnamePage();else if(page==='stock-opname-report')stockOpnameReportPage();else if(page==='delivery-summary')deliverySummaryPage();else if(page==='transaction-summary')transactionSummaryPage();else if(page==='transaction-revision')transactionRevisionPage();else if(page==='master-part')masterPartPage();else if(page==='warehouse')warehousePage();else if(page==='customer')customerPage();else if(page==='bom')bomPage();else if(page==='import-center')importCenterPage();}
+function go(page){openNavSectionFor(page);if(!canAccessPage(page)){toast('Akses ditolak. Menu ini khusus ADMIN.',false);return;}closeMobileSidebar();if(page!=='scan'&&document.getElementById('scanPageWrap')?.classList.contains('scan-fullscreen-wrap')){exitScanFullscreen();}const m=META[page]||META.dashboard;document.getElementById('pageTitle').textContent=m[0];document.getElementById('pageSub').textContent=m[1];document.querySelectorAll('.nav-item').forEach(x=>x.classList.toggle('active',x.dataset.page===page));document.getElementById('nav').classList.remove('open');if(page==='dashboard'){if(String(user()?.Role||'').trim().toUpperCase()==='OPERATOR'&&!isViewer())operatorHome();else dashboard();}else if(page==='scan')scanPage();else if(page==='stock')stockPage();else if(page==='stock-summary')stockSummaryPage();else if(page==='stock-card')stockCardPage();else if(page==='transactions')txPage();else if(page==='receiving')receivingPage();else if(page==='transfer')transferPage();else if(page==='issue')issuePage();else if(page==='production')productionPage();else if(page==='testing')testingPage();else if(page==='delivery')deliveryPage();else if(page==='stock-opname')opnamePage();else if(page==='stock-opname-report')stockOpnameReportPage();else if(page==='delivery-summary')deliverySummaryPage();else if(page==='transaction-summary')transactionSummaryPage();else if(page==='transaction-revision')transactionRevisionPage();else if(page==='master-part')masterPartPage();else if(page==='warehouse')warehousePage();else if(page==='customer')customerPage();else if(page==='bom')bomPage();else if(page==='import-center')importCenterPage();}
 function shell(title,desc,body,action=''){document.getElementById('content').innerHTML=`<div class="page-head"><div><h3>${title}</h3><p>${desc}</p></div>${action}</div>${body}`}
 function sel(name,items,placeholder='Select...'){return `<select id="${name}"><option value="">${placeholder}</option>${(items||[]).map(x=>{const o=(x!==null&&typeof x==='object')?x:{id:x,label:x};return `<option value="${esc(o.id??'')}">${esc(o.label??o.id??'')}</option>`}).join('')}</select>`}
 function normalizePartGroup(x){return String(x||'').trim();}
@@ -1186,7 +1236,7 @@ async function dashboard(){
     <button id="dashboardExitBtn" class="dashboard-exit" type="button">✕ Exit Full Screen</button>
 
     <div class="kpis kpis-main dashboard-kpis-compact">
-      <div class="kpi k-stock"><span>FG STOCK Before Testing</span><b id="kFgStock">-</b><small></small></div>
+      <div class="kpi k-stock"><span>FG STOCK — W08</span><b id="kFgStock">-</b><small></small></div>
       <div class="kpi k-delivery"><span>DELIVERY THIS MONTH</span><b id="kMonthDelivery">-</b><small id="kMonthDeliverySub">Current month</small></div>
       <div class="kpi k-inbound"><span>INBOUND TODAY</span><b id="k1">-</b><small>Receiving today</small></div>
       <div class="kpi k-ng"><span>LOW STOCK ITEMS</span><b id="kLowStock">-</b><small></small></div>
@@ -1194,7 +1244,7 @@ async function dashboard(){
 
     <div class="dashboard-grid dashboard-grid-main">
       <div class="panel dashboard-panel-fg">
-        <div class="panel-head"><h4>Before Hot Test</h4><span class="panel-note"></span></div>
+        <div class="panel-head"><h4>Summary Finish Good</h4><span class="panel-note"></span></div>
         <div id="fgSummary" class="dashboard-fg-summary compact" style="margin-top:10px"></div>
       </div>
 
@@ -2198,19 +2248,19 @@ function selectTestingItem(i){
     <div class="selected-item">
       <div><small>FINISHED PRODUCT</small><b>${esc(x.PartNumber)}</b><span>${esc(x.PartName||'')}</span></div>
       <div><small>BATCH</small><b>${esc(x.BatchNo||'-')}</b></div>
-      <div><small>AVAILABLE IN W06 / FG</small><b>${fmt(max)}</b></div>
+      <div><small>AVAILABLE IN TEST</small><b>${fmt(max)}</b></div>
     </div>
     <div class="form-grid">
       ${f('Testing Qty','testingQty','number',`min="0.000001" max="${max}" step="any" value="${max}"`)}
-      ${f('Testing Batch (isi manual)','testingSourceLot','text',`placeholder="Masukkan Testing Batch baru secara manual" autocomplete="off"`)}
+      ${f('Testing Batch (isi manual)','testingSourceLot','text',`placeholder="Masukkan batch yang ada di TEST" autocomplete="off"`)}
       ${f('Reference','testingRef')}
       ${f('Remarks / Reason','testingRemarks')}
     </div>
     <div class="form-actions">
-      <button class="btn primary" id="testingPassBtn">✓ PASS → W08 / TEST</button>
-      <button class="btn danger" id="testingNgBtn">✕ NG → W09 / HOLD</button>
+      <button class="btn primary" id="testingPassBtn">✓ PASS → FG</button>
+      <button class="btn danger" id="testingNgBtn">✕ NG → HOLD</button>
     </div>
-    <div class="process-note">Flow: <b>W06 / FG Source Batch → PASS → W08 / TEST</b> atau <b>W06 / FG → W08 / TEST → NG → W09 / HOLD</b>. Testing Batch diisi manual dan boleh berbeda dari Source Batch.</div>`;
+    <div class="process-note">Flow: <b>TEST / Testing Batch manual → PASS → FG</b> atau <b>TEST / Testing Batch manual → NG → HOLD</b>. Pastikan batch yang diketik sama dengan batch stok di TEST.</div>`;
 
   document.getElementById('testingPassBtn').onclick=()=>postTestingResult_(x,'testingPass');
   document.getElementById('testingNgBtn').onclick=()=>postTestingResult_(x,'testingNG');
@@ -2220,14 +2270,14 @@ async function postTestingResult_(x,action){
   const qty=Number(v('testingQty')||0);
   if(!qty||qty<=0){toast('Testing Qty harus lebih besar dari 0.',false);return;}
   const available=Number(x.QtyAvailable ?? x.QtyOnHand ?? 0);
-  if(qty>available){toast('Qty Testing melebihi stock yang tersedia di W06 / FG.',false);return;}
+  if(qty>available){toast('Qty Testing melebihi stock yang tersedia di TEST.',false);return;}
   if(action==='testingNG' && !v('testingRemarks')){toast('Alasan NG wajib diisi.',false);return;}
   const testingBatch=v('testingSourceLot').trim();
   if(!testingBatch){toast('Testing Batch wajib Anda isi secara manual.',false);return;}
   const label=action==='testingPass'?'Testing PASS':'Testing NG';
-  if(!confirm(`${label}: ${x.PartNumber} | Source Batch ${x.BatchNo||'-'} → Testing Batch ${testingBatch} | Qty ${qty}?`))return;
+  if(!confirm(`${label}: ${x.PartNumber} | Testing Batch ${testingBatch} | Qty ${qty}?`))return;
   try{
-    const r=await apiPost(action,{username:user().Username||'admin',partId:x.PartID,qty,uom:x.UOM||'PCS',batchNo:testingBatch,sourceLot:String(x.BatchNo||'').trim(),sourceBatchNo:String(x.BatchNo||'').trim(),outputTestingLot:testingBatch,destinationBatchNo:testingBatch,referenceNo:v('testingRef'),remarks:v('testingRemarks'),requestId:makeRequestId()});
+    const r=await apiPost(action,{username:user().Username||'admin',partId:x.PartID,qty,uom:x.UOM||'PCS',batchNo:testingBatch,referenceNo:v('testingRef'),remarks:v('testingRemarks'),requestId:makeRequestId()});
     if(!r.success)throw new Error(r.message||label+' gagal.');
     toast(r.message||label+' berhasil.');
     await refreshStockOnly();
@@ -2882,6 +2932,7 @@ function showApp(u){
   if(sidebarRole) sidebarRole.textContent=role==='ADMIN'?'System Administrator':(role==='OPERATOR'?'Warehouse Operator':(role||'WMS User'));
   if(sidebarAvatar) sidebarAvatar.textContent=String(u.FullName||u.Username||'W').trim().charAt(0).toUpperCase()||'W';
   buildNav();
+applyRoleProfile();
 }
 document.getElementById('loginForm').addEventListener('submit',handleLogin);document.addEventListener('fullscreenchange',()=>{if(!document.fullscreenElement&&html5Scanner){document.getElementById('scanPageWrap')?.classList.remove('scan-fullscreen-wrap');document.body.classList.remove('scan-active');}});
 (async()=>{

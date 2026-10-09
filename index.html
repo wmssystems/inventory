@@ -1186,7 +1186,7 @@ async function dashboard(){
     <button id="dashboardExitBtn" class="dashboard-exit" type="button">✕ Exit Full Screen</button>
 
     <div class="kpis kpis-main dashboard-kpis-compact">
-      <div class="kpi k-stock"><span>FG STOCK — W08</span><b id="kFgStock">-</b><small></small></div>
+      <div class="kpi k-stock"><span>FG STOCK Before Testing</span><b id="kFgStock">-</b><small></small></div>
       <div class="kpi k-delivery"><span>DELIVERY THIS MONTH</span><b id="kMonthDelivery">-</b><small id="kMonthDeliverySub">Current month</small></div>
       <div class="kpi k-inbound"><span>INBOUND TODAY</span><b id="k1">-</b><small>Receiving today</small></div>
       <div class="kpi k-ng"><span>LOW STOCK ITEMS</span><b id="kLowStock">-</b><small></small></div>
@@ -1194,7 +1194,7 @@ async function dashboard(){
 
     <div class="dashboard-grid dashboard-grid-main">
       <div class="panel dashboard-panel-fg">
-        <div class="panel-head"><h4>Summary Finish Good</h4><span class="panel-note"></span></div>
+        <div class="panel-head"><h4>Before Hot Test</h4><span class="panel-note"></span></div>
         <div id="fgSummary" class="dashboard-fg-summary compact" style="margin-top:10px"></div>
       </div>
 
@@ -2198,19 +2198,19 @@ function selectTestingItem(i){
     <div class="selected-item">
       <div><small>FINISHED PRODUCT</small><b>${esc(x.PartNumber)}</b><span>${esc(x.PartName||'')}</span></div>
       <div><small>BATCH</small><b>${esc(x.BatchNo||'-')}</b></div>
-      <div><small>AVAILABLE IN TEST</small><b>${fmt(max)}</b></div>
+      <div><small>AVAILABLE IN W06 / FG</small><b>${fmt(max)}</b></div>
     </div>
     <div class="form-grid">
       ${f('Testing Qty','testingQty','number',`min="0.000001" max="${max}" step="any" value="${max}"`)}
-      ${f('Source Lot','testingSourceLot','text',`value="${esc(x.BatchNo||'')}"`)}
+      ${f('Testing Batch (isi manual)','testingSourceLot','text',`placeholder="Masukkan Testing Batch baru secara manual" autocomplete="off"`)}
       ${f('Reference','testingRef')}
       ${f('Remarks / Reason','testingRemarks')}
     </div>
     <div class="form-actions">
-      <button class="btn primary" id="testingPassBtn">✓ PASS → FG</button>
-      <button class="btn danger" id="testingNgBtn">✕ NG → HOLD</button>
+      <button class="btn primary" id="testingPassBtn">✓ PASS → W08 / TEST</button>
+      <button class="btn danger" id="testingNgBtn">✕ NG → W09 / HOLD</button>
     </div>
-    <div class="process-note">Flow: <b>TEST / Source Lot → PASS → FG</b> atau <b>TEST / Source Lot → NG → HOLD</b>. FG Delivery mengambil dari TEST / WH008.</div>`;
+    <div class="process-note">Flow: <b>W06 / FG Source Batch → PASS → W08 / TEST</b> atau <b>W06 / FG → W08 / TEST → NG → W09 / HOLD</b>. Testing Batch diisi manual dan boleh berbeda dari Source Batch.</div>`;
 
   document.getElementById('testingPassBtn').onclick=()=>postTestingResult_(x,'testingPass');
   document.getElementById('testingNgBtn').onclick=()=>postTestingResult_(x,'testingNG');
@@ -2220,14 +2220,14 @@ async function postTestingResult_(x,action){
   const qty=Number(v('testingQty')||0);
   if(!qty||qty<=0){toast('Testing Qty harus lebih besar dari 0.',false);return;}
   const available=Number(x.QtyAvailable ?? x.QtyOnHand ?? 0);
-  if(qty>available){toast('Qty Testing melebihi stock yang tersedia di TEST.',false);return;}
+  if(qty>available){toast('Qty Testing melebihi stock yang tersedia di W06 / FG.',false);return;}
   if(action==='testingNG' && !v('testingRemarks')){toast('Alasan NG wajib diisi.',false);return;}
-  const sourceLot=v('testingSourceLot')||x.BatchNo||'';
-  if(!sourceLot){toast('Source Lot wajib diisi.',false);return;}
+  const testingBatch=v('testingSourceLot').trim();
+  if(!testingBatch){toast('Testing Batch wajib Anda isi secara manual.',false);return;}
   const label=action==='testingPass'?'Testing PASS':'Testing NG';
-  if(!confirm(`${label}: ${x.PartNumber} | Source Lot ${sourceLot} | Qty ${qty}?`))return;
+  if(!confirm(`${label}: ${x.PartNumber} | Source Batch ${x.BatchNo||'-'} → Testing Batch ${testingBatch} | Qty ${qty}?`))return;
   try{
-    const r=await apiPost(action,{username:user().Username||'admin',partId:x.PartID,qty,uom:x.UOM||'PCS',batchNo:sourceLot,referenceNo:v('testingRef'),remarks:v('testingRemarks'),requestId:makeRequestId()});
+    const r=await apiPost(action,{username:user().Username||'admin',partId:x.PartID,qty,uom:x.UOM||'PCS',batchNo:testingBatch,sourceLot:String(x.BatchNo||'').trim(),sourceBatchNo:String(x.BatchNo||'').trim(),outputTestingLot:testingBatch,destinationBatchNo:testingBatch,referenceNo:v('testingRef'),remarks:v('testingRemarks'),requestId:makeRequestId()});
     if(!r.success)throw new Error(r.message||label+' gagal.');
     toast(r.message||label+' berhasil.');
     await refreshStockOnly();

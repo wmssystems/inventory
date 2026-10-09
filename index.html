@@ -794,6 +794,40 @@ body.scan-active{overflow:hidden!important}
   .operator-mode .tx-card:nth-child(2) .tx-card-body{padding:10px!important}
 }
 
+
+/* ===== FIX: separate navigation scroll area from Logout footer ===== */
+.sidebar{
+  display:flex !important;
+  flex-direction:column !important;
+  overflow:hidden !important;
+}
+#nav{
+  flex:1 1 auto !important;
+  min-height:0 !important;
+  overflow-y:auto !important;
+  overflow-x:hidden !important;
+  overscroll-behavior:contain;
+  scrollbar-width:thin;
+}
+.sidebar .logout{
+  position:relative !important;
+  inset:auto !important;
+  flex:0 0 auto !important;
+  width:calc(100% - 6px) !important;
+  margin:10px 3px 0 !important;
+  z-index:2;
+}
+@media(max-width:900px){
+  .sidebar{
+    height:100dvh;
+    height:100vh;
+    padding-bottom:max(12px, env(safe-area-inset-bottom)) !important;
+  }
+  #nav{
+    padding-bottom:8px;
+  }
+}
+
 </style>
 <style>
 /* ===== WMS UPDATE - TRANSACTION PART GROUP ===== */
@@ -1087,7 +1121,7 @@ function buildNav(){
 }
 async function loadCache(){const jobs=[['parts','parts'],['warehouses','warehouses'],['customers','customers'],['stock','stock'],['productionParts','productionParts']];const results=await Promise.all(jobs.map(async([k,a])=>{try{return [k,await apiGet(a)]}catch(e){return [k,{success:false,error:e}]}}));results.forEach(([k,r])=>{if(r.success)CACHE[k]=r.data||[]});}
 function openNavSectionFor(page){const b=document.querySelector(`.nav-item[data-page="${page}"]`);if(!b)return;const sec=b.closest('.nav-section');if(!sec)return;const group=sec.querySelector('.nav-group');const head=sec.querySelector('.nav-sec');if(group&&!group.classList.contains('open')){group.classList.add('open');head.classList.add('open');}}
-function go(page){openNavSectionFor(page);if(!canAccessPage(page)){toast('Akses ditolak. Menu ini khusus ADMIN.',false);return;}if(page!=='scan'&&document.getElementById('scanPageWrap')?.classList.contains('scan-fullscreen-wrap')){exitScanFullscreen();}const m=META[page]||META.dashboard;document.getElementById('pageTitle').textContent=m[0];document.getElementById('pageSub').textContent=m[1];document.querySelectorAll('.nav-item').forEach(x=>x.classList.toggle('active',x.dataset.page===page));document.getElementById('nav').classList.remove('open');if(page==='dashboard'){if(String(user()?.Role||'').trim().toUpperCase()==='OPERATOR')operatorHome();else dashboard();}else if(page==='scan')scanPage();else if(page==='stock')stockPage();else if(page==='stock-summary')stockSummaryPage();else if(page==='stock-card')stockCardPage();else if(page==='transactions')txPage();else if(page==='receiving')receivingPage();else if(page==='transfer')transferPage();else if(page==='issue')issuePage();else if(page==='production')productionPage();else if(page==='testing')testingPage();else if(page==='delivery')deliveryPage();else if(page==='stock-opname')opnamePage();else if(page==='stock-opname-report')stockOpnameReportPage();else if(page==='delivery-summary')deliverySummaryPage();else if(page==='transaction-summary')transactionSummaryPage();else if(page==='transaction-revision')transactionRevisionPage();else if(page==='master-part')masterPartPage();else if(page==='warehouse')warehousePage();else if(page==='customer')customerPage();else if(page==='bom')bomPage();else if(page==='import-center')importCenterPage();}
+function go(page){openNavSectionFor(page);if(!canAccessPage(page)){toast('Akses ditolak. Menu ini khusus ADMIN.',false);return;}closeMobileSidebar();if(page!=='scan'&&document.getElementById('scanPageWrap')?.classList.contains('scan-fullscreen-wrap')){exitScanFullscreen();}const m=META[page]||META.dashboard;document.getElementById('pageTitle').textContent=m[0];document.getElementById('pageSub').textContent=m[1];document.querySelectorAll('.nav-item').forEach(x=>x.classList.toggle('active',x.dataset.page===page));document.getElementById('nav').classList.remove('open');if(page==='dashboard'){if(String(user()?.Role||'').trim().toUpperCase()==='OPERATOR')operatorHome();else dashboard();}else if(page==='scan')scanPage();else if(page==='stock')stockPage();else if(page==='stock-summary')stockSummaryPage();else if(page==='stock-card')stockCardPage();else if(page==='transactions')txPage();else if(page==='receiving')receivingPage();else if(page==='transfer')transferPage();else if(page==='issue')issuePage();else if(page==='production')productionPage();else if(page==='testing')testingPage();else if(page==='delivery')deliveryPage();else if(page==='stock-opname')opnamePage();else if(page==='stock-opname-report')stockOpnameReportPage();else if(page==='delivery-summary')deliverySummaryPage();else if(page==='transaction-summary')transactionSummaryPage();else if(page==='transaction-revision')transactionRevisionPage();else if(page==='master-part')masterPartPage();else if(page==='warehouse')warehousePage();else if(page==='customer')customerPage();else if(page==='bom')bomPage();else if(page==='import-center')importCenterPage();}
 function shell(title,desc,body,action=''){document.getElementById('content').innerHTML=`<div class="page-head"><div><h3>${title}</h3><p>${desc}</p></div>${action}</div>${body}`}
 function sel(name,items,placeholder='Select...'){return `<select id="${name}"><option value="">${placeholder}</option>${(items||[]).map(x=>{const o=(x!==null&&typeof x==='object')?x:{id:x,label:x};return `<option value="${esc(o.id??'')}">${esc(o.label??o.id??'')}</option>`}).join('')}</select>`}
 function normalizePartGroup(x){return String(x||'').trim();}
@@ -2814,7 +2848,8 @@ async function submit(action,data,label,buttonId=null){
 function v(id){return document.getElementById(id)?.value?.trim()||''}
 async function refreshStockOnly(){try{const r=await apiGet('stock');if(r.success)CACHE.stock=r.data||[]}catch(e){}}
 async function refreshAll(){await loadCache();go(document.querySelector('.nav-item.active')?.dataset.page||'dashboard')}
-document.getElementById('logoutBtn').onclick=()=>{logoutUser();};document.getElementById('refreshBtn').onclick=refreshAll;document.getElementById('mobileMenu').onclick=()=>{const side=document.querySelector('.sidebar');const opened=side.classList.toggle('open');document.body.classList.toggle('wms-nav-open',opened);};
+function closeMobileSidebar(){if(window.innerWidth<=900){document.querySelector('.sidebar')?.classList.remove('open');document.body.classList.remove('wms-nav-open');}}
+document.getElementById('logoutBtn').onclick=()=>{closeMobileSidebar();logoutUser();};document.getElementById('refreshBtn').onclick=refreshAll;document.getElementById('mobileMenu').onclick=()=>{const side=document.querySelector('.sidebar');const opened=side.classList.toggle('open');document.body.classList.toggle('wms-nav-open',opened);};
 async function handleLogin(event){
   event.preventDefault();
   const msg=document.getElementById('loginMessage');
@@ -2860,5 +2895,5 @@ document.getElementById('loginForm').addEventListener('submit',handleLogin);docu
   }
   try{await apiGet('test');document.getElementById('apiState').textContent='● API Ready';document.getElementById('apiState').className='api-state good';}catch(e){document.getElementById('loginMessage').textContent='API tidak dapat dihubungi: '+e.message;}
 })();
-document.addEventListener('click',e=>{if(window.innerWidth<=900 && document.querySelector('.sidebar.open') && !e.target.closest('.sidebar') && !e.target.closest('#mobileMenu')) document.querySelector('.sidebar').classList.remove('open');document.body.classList.remove('wms-nav-open');});
+document.addEventListener('click',e=>{if(window.innerWidth<=900 && document.querySelector('.sidebar.open') && !e.target.closest('.sidebar') && !e.target.closest('#mobileMenu')) closeMobileSidebar();});
 </script></body></html>
